@@ -110,9 +110,9 @@ def cau_dung_phut(bay_gio, nghi_hoc):
 
 
 def ngay_ap_dung_nghi(bay_gio):
-    """Ngày mà cờ nghỉ học đang nói tới: trước 7:15 là hôm nay, sau đó là ngày đi học kế tiếp."""
+    """Ngày mà cờ nghỉ học đang nói tới: trước 7:15 của ngày đi học là hôm nay, còn lại là ngày đi học kế tiếp."""
     hom_nay = bay_gio.date()
-    if bay_gio.hour * 60 + bay_gio.minute < HET_SANG:
+    if hom_nay.weekday() < 5 and bay_gio.hour * 60 + bay_gio.minute < HET_SANG:
         return hom_nay
     ngay = hom_nay + timedelta(days=1)
     while ngay.weekday() >= 5:

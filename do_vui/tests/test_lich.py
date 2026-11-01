@@ -75,6 +75,8 @@ class TestLich(unittest.TestCase):
         self.assertEqual(lich.ngay_ap_dung_nghi(datetime(*T2, 6, 0)), date(2026, 11, 2))
         self.assertEqual(lich.ngay_ap_dung_nghi(datetime(*T2, 21, 0)), date(2026, 11, 3))
         self.assertEqual(lich.ngay_ap_dung_nghi(datetime(2026, 11, 6, 21, 0)), date(2026, 11, 9))
+        self.assertEqual(lich.ngay_ap_dung_nghi(datetime(2026, 11, 7, 6, 0)), date(2026, 11, 9))   # thứ bảy
+        self.assertEqual(lich.ngay_ap_dung_nghi(datetime(2026, 11, 8, 21, 0)), date(2026, 11, 9))  # chủ nhật
 
     def test_doc_file_trang_thai(self):
         hom_nay, hom_qua = date(2026, 11, 2), date(2026, 11, 1)

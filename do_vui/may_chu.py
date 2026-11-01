@@ -85,12 +85,12 @@ def nhac_theo_lich():
             khoa = (bay_gio.date(), bay_gio.hour, bay_gio.minute)
             if cau and khoa not in da_doc:
                 da_doc.add(khoa)
+                gui_phim("man_cho")  # đổi màn hình cùng lúc với giọng đọc
                 tep = os.path.join(AM_THANH, ten_file(cau))
                 if os.path.exists(tep):
-                    subprocess.run(["aplay", "-q", tep])
+                    subprocess.run(["aplay", "-q", tep], timeout=30)
                 else:
                     ghi_nhat_ky(f"Thiếu giọng đọc cho màn hình chờ: {cau}")
-                gui_phim("man_cho")
         except Exception as loi:
             ghi_nhat_ky(f"Lỗi luồng nhắc theo lịch: {loi!r}")
         time.sleep(15)

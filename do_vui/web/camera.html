@@ -43,7 +43,7 @@ function gio() {
 
 addEventListener("keydown", e => { e.preventDefault(); location = "/"; });
 new EventSource("/phim").onmessage = e => {
-  if (e.data === "camera") return;
+  if (e.data === "camera" || e.data === "man_cho") return;
   location = e.data.startsWith("be:") ? "/be_tv.html#" + e.data.slice(3) : "/";
 };
 

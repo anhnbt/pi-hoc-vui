@@ -62,9 +62,9 @@ function ve(t) {
     if (t.tong) duoi = Array.from({ length: t.tong }, (_, i) =>
       `<span class="cham${i + 1 === t.buoc ? " nay" : ""}"></span>`).join("");
   } else if (t.che_do === "hoc") tren = t.gio;
-  else if (ranh) duoi = t.tiep_theo || "";
   $("tren").textContent = den ? "" : tren;
-  $("duoi").innerHTML = den ? "" : duoi;
+  if (ranh) $("duoi").textContent = t.tiep_theo ? "Tiếp theo: " + t.tiep_theo : "";
+  else $("duoi").innerHTML = den ? "" : duoi;
 }
 
 function hoi() {

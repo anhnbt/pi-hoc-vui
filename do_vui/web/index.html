@@ -147,7 +147,10 @@ function bam(phim) {
   if (man !== "choi") {
     if (phim !== "chon") return;
     // Đang khoá Đố vui (giờ việc buổi sáng) thì về màn chờ, không bắt đầu lượt mới
-    trang_thai().then(t => { if (t && t.khoa_do_vui) location = "/man_cho.html"; else bat_dau(); });
+    trang_thai().then(t => {
+      if (man === "choi") return;  // đã có lượt khác bắt đầu trong lúc chờ máy chủ
+      if (t && t.khoa_do_vui) location = "/man_cho.html"; else bat_dau();
+    });
     return;
   }
   if (phim === "chon") tra_loi(o_chon);
