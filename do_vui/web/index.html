@@ -150,8 +150,15 @@ function bam(phim) {
 
 // Bàn phím (để thử trên máy tính) ...
 const PHIM = { ArrowLeft: "trai", ArrowRight: "phai", ArrowUp: "len", ArrowDown: "xuong", Enter: "chon",
-  " ": "chon", "1": "do", "2": "xanh_la", "3": "vang", "4": "xanh_duong", r: "nghe_lai" };
-addEventListener("keydown", e => { if (PHIM[e.key]) { e.preventDefault(); bam(PHIM[e.key]); } });
+  " ": "chon", "1": "do", "2": "xanh_la", "3": "vang", "4": "xanh_duong", r: "nghe_lai", "0": "nghe_lai" };
+// Bàn phím số bên phải: tra theo vị trí phím (e.code) để vẫn đúng khi Num Lock tắt,
+// lúc đó e.key của phím 1 là "End" chứ không phải "1"
+const PHIM_VI_TRI = { Numpad1: "do", Numpad2: "xanh_la", Numpad3: "vang", Numpad4: "xanh_duong",
+  NumpadEnter: "chon", NumpadAdd: "chon", Numpad0: "nghe_lai", KeyR: "nghe_lai" };
+addEventListener("keydown", e => {
+  const phim = PHIM_VI_TRI[e.code] || PHIM[e.key];
+  if (phim) { e.preventDefault(); bam(phim); }
+});
 // ... chuột (bấm vào màn hình đầu/cuối để bắt đầu) ...
 document.querySelectorAll("#man-dau, #man-cuoi").forEach(m => m.onclick = () => bam("chon"));
 // ... và điều khiển TV hoặc tay cầm điện thoại, do may_chu.py chuyển sang

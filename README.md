@@ -58,7 +58,7 @@ Thêm câu hỏi: sửa danh sách trong `tao_cau_hoi.py` rồi chạy lại. C�
 
 | Điều khiển | Chọn ô | Trả lời | Nghe lại |
 |---|---|---|---|
-| Bàn phím | phím số 1–4, hoặc mũi tên | Enter | R |
+| Bàn phím | phím số 1–4 (hàng số hoặc bàn phím số bên phải, kể cả khi tắt Num Lock), hoặc mũi tên | Enter | R hoặc 0 |
 | Điện thoại | nút màu 1–4 | OK ▶ | 🔊 |
 | Hộp nút Arduino | nút 1–4 | OK | Nghe lại |
 | Điều khiển TV (CEC) | nút màu, hoặc mũi tên | OK | Back |
