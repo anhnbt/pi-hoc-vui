@@ -1,10 +1,11 @@
 """Máy chủ cho trò Đố vui: phục vụ trang web, và chuyển phím từ điều khiển TV (HDMI-CEC)
 hoặc tay cầm điện thoại (/tay-cam) sang trang."""
-import array, collections, glob, http.server, json, math, os, queue, re, socket, subprocess, tempfile, threading, time
+import array, collections, datetime, glob, http.server, json, math, os, queue, re, socket, subprocess, tempfile, threading, time
 from urllib.parse import urlparse, parse_qs, quote
 
 import serial  # pyserial, có sẵn trên Raspberry Pi OS
 
+import lich
 import loa_camera
 from tao_be import CANH_BAO_KHOC
 from tao_cau_hoi import AM_THANH, ten_file
@@ -18,7 +19,7 @@ PHIM_CEC = {  # mã nút điều khiển theo chuẩn CEC
     "0x71": "xanh_duong", "0x72": "do", "0x73": "xanh_la", "0x74": "vang",
 }
 
-PHIM_HOP_LE = set(PHIM_CEC.values()) | {"camera"}
+PHIM_HOP_LE = set(PHIM_CEC.values()) | {"camera", "man_cho"}
 
 # Camera Imou trong nhà: dùng luồng phụ 640x480 H.264 cho nhẹ. Mật khẩu nằm trong ~/hoc/camera.env
 # (dòng CAM_MAT_KHAU=...), không có file đó thì tắt tính năng camera.
@@ -31,6 +32,10 @@ NGUONG_KHOC = float(os.environ.get("NGUONG_KHOC", -25))  # dBFS, to hơn mức n
 SO_LAN_ON = 6                # 6 trong 10 lần đo gần nhất (khoảng 3 giây) đều ồn thì báo
 NGHI_GIUA_HAI_LAN = 120      # giây, để không báo dồn dập khi bé khóc lâu
 NHAT_KY = os.path.expanduser("~/hoc/log.txt")
+
+# Màn hình chờ: nút "nghỉ học" bật tay, buổi gia sư do nhac_nghi.py ghi lúc 18:50
+NGHI_HOC = os.path.expanduser("~/hoc/nghi_hoc.txt")
+GIA_SU = os.path.expanduser("~/hoc/gia_su.json")
 
 # Lời nhắn từ trang /loi-nhan: câu có sẵn thì phát giọng VieNeu đã đọc trước (tao_loi_nhan.py),
 # câu gõ tay thì đọc ngay bằng Piper chạy thường trực (doc_nhanh.py, trong ~/hoc/venv)
@@ -53,6 +58,42 @@ def dia_chi_ip():
 def gui_phim(phim):
     for q in list(nguoi_nghe):
         q.put(phim)
+
+
+def trang_thai_bay_gio(bay_gio):
+    ngay = bay_gio.date()
+    return lich.trang_thai(bay_gio, lich.doc_nghi_hoc(NGHI_HOC, ngay), lich.doc_gia_su(GIA_SU, ngay))
+
+
+def ghi_nhat_ky(dong):
+    try:
+        with open(NHAT_KY, "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {dong}\n")
+    except OSError:
+        pass
+
+
+def nhac_theo_lich():
+    """Cứ 15 giây xem có câu nhắc nào đến giờ chưa: đọc bằng loa Pi rồi báo trang màn hình chờ cập nhật."""
+    da_doc = set()
+    while True:
+        try:
+            bay_gio = datetime.datetime.now()
+            da_doc = {k for k in da_doc if k[0] == bay_gio.date()}  # chỉ giữ khóa của hôm nay
+            nghi = lich.doc_nghi_hoc(NGHI_HOC, lich.ngay_ap_dung_nghi(bay_gio))
+            cau = lich.cau_dung_phut(bay_gio, nghi)
+            khoa = (bay_gio.date(), bay_gio.hour, bay_gio.minute)
+            if cau and khoa not in da_doc:
+                da_doc.add(khoa)
+                tep = os.path.join(AM_THANH, ten_file(cau))
+                if os.path.exists(tep):
+                    subprocess.run(["aplay", "-q", tep])
+                else:
+                    ghi_nhat_ky(f"Thiếu giọng đọc cho màn hình chờ: {cau}")
+                gui_phim("man_cho")
+        except Exception as loi:
+            ghi_nhat_ky(f"Lỗi luồng nhắc theo lịch: {loi!r}")
+        time.sleep(15)
 
 
 def dia_chi_camera():
@@ -174,8 +215,34 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(noi_dung.encode())
 
+    def tra_json(self, du_lieu):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(json.dumps(du_lieu, ensure_ascii=False).encode())
+
+    def tra_nghi_hoc(self):
+        ngay = lich.ngay_ap_dung_nghi(datetime.datetime.now())
+        self.tra_json({"ngay": ngay.isoformat(), "nghi": lich.doc_nghi_hoc(NGHI_HOC, ngay)})
+
     def do_POST(self):
         url = urlparse(self.path)
+        if url.path == "/nghi-hoc":
+            nghi = parse_qs(url.query).get("nghi", [""])[0]
+            if nghi not in ("0", "1"):
+                return self.tra_loi_chu(400, "nghi phải là 0 hoặc 1")
+            if nghi == "1":
+                ngay = lich.ngay_ap_dung_nghi(datetime.datetime.now())
+                with open(NGHI_HOC, "w", encoding="utf-8") as f:
+                    f.write(ngay.isoformat())
+            else:
+                try:
+                    os.remove(NGHI_HOC)
+                except FileNotFoundError:
+                    pass
+            gui_phim("man_cho")
+            return self.tra_nghi_hoc()
         if url.path == "/noi":
             loa = parse_qs(url.query).get("loa", ["camera"])[0]
             do_dai = int(self.headers.get("Content-Length", 0))
@@ -204,7 +271,17 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
             self.path = "/loi_nhan.html"
         if self.path == "/dia-chi":
             return self.tra_loi_chu(200, f"http://{dia_chi_ip()}:8080/tay-cam")
-        if urlparse(self.path).path == "/camera.mjpg":
+        duong = urlparse(self.path).path
+        if duong == "/nghi-hoc":
+            return self.tra_nghi_hoc()
+        if duong == "/man-cho/trang-thai":
+            gio = parse_qs(urlparse(self.path).query).get("gio", [None])[0]
+            try:
+                bay_gio = datetime.datetime.fromisoformat(gio) if gio else datetime.datetime.now()
+            except ValueError:
+                return self.tra_loi_chu(400, "gio phải dạng YYYY-MM-DDTHH:MM")
+            return self.tra_json(trang_thai_bay_gio(bay_gio))
+        if duong == "/camera.mjpg":
             return self.phat_camera()
         if self.path != "/phim":
             return super().do_GET()
@@ -257,6 +334,7 @@ if __name__ == "__main__":
     threading.Thread(target=nghe_cec, daemon=True).start()
     threading.Thread(target=nghe_khoc, daemon=True).start()
     threading.Thread(target=nghe_hop_nut, daemon=True).start()
+    threading.Thread(target=nhac_theo_lich, daemon=True).start()
 
     def mo_san_piper():
         with khoa_noi:

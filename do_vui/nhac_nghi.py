@@ -6,7 +6,7 @@ Có buổi học thì 19:15 nhắc nghỉ 5 phút, 19:20 nhắc học tiếp. M�
 
 Chạy thử ngay (đếm 1 phút, chỉ cần thấy 1 người, nhắc liền):  ../vieneu-venv/bin/python nhac_nghi.py --thu
 """
-import datetime, os, subprocess, sys, time
+import datetime, json, os, subprocess, sys, time
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
@@ -49,6 +49,13 @@ def ghi(dong):
     print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {dong}", flush=True)
 
 
+def ghi_gia_su(co):
+    """Màn hình chờ trên TV đọc file này để biết tối nay có buổi gia sư không."""
+    tep = os.path.expanduser("~/hoc/gia_su.json")
+    with open(tep, "w", encoding="utf-8") as f:
+        json.dump({"ngay": datetime.date.today().isoformat(), "co": co}, f)
+
+
 def main():
     thu = "--thu" in sys.argv
     tao_giong()
@@ -67,7 +74,9 @@ def main():
         time.sleep(20)
 
     if so_lan == 0 or so_lan_co_hoc * 2 <= so_lan:
+        ghi_gia_su(False)
         return ghi(f"Không có buổi học gia sư ({so_lan_co_hoc}/{so_lan} lần thấy từ {it_nhat} người)")
+    ghi_gia_su(True)
     ghi(f"Có buổi học gia sư ({so_lan_co_hoc}/{so_lan} lần thấy từ {it_nhat} người)")
     if not thu:
         doi_den(GIO_NGHI)
