@@ -81,6 +81,28 @@ Khi có tiếng to khoảng 3 giây liền, loa Pi đọc *"Bố mẹ ơi! Em b�
 (trừ khi anh đang chơi dở một lượt) và `~/hoc/log.txt` ghi lại giờ báo. Sau mỗi lần báo, máy chủ nghỉ 2 phút.
 Ngưỡng mặc định là -25 dBFS (`NGUONG_KHOC` trong `may_chu.py`): báo nhầm nhiều thì tăng lên (ví dụ -20), không báo thì hạ xuống (ví dụ -30).
 
+**Nói qua loa camera:** `python3 do_vui/loa_camera.py <file.wav>` phát một file âm thanh ra loa camera,
+qua kênh âm thanh ngược của RTSP theo chuẩn ONVIF (G.711 A-law 8 kHz).
+
+### Nhắc nghỉ giữa buổi học gia sư
+
+Cô dạy 18:30–20:00 nhưng không cố định thứ nào. Cron chạy [do_vui/nhac_nghi.py](do_vui/nhac_nghi.py) lúc 18:30 mỗi ngày:
+từ 18:30 đến 18:50, cứ 20 giây Pi đếm số người trong phòng một lần (YOLO11n, chỉ đếm, không nhận mặt, không lưu ảnh).
+Quá nửa số lần đếm thấy từ 2 người trở lên thì hôm đó tính là có buổi học. Khi đó loa camera nhắc cô cho con nghỉ 5 phút lúc 19:15,
+và nhắc học tiếp lúc 19:20. Mỗi ngày `log.txt` ghi lại có buổi học hay không.
+
+```bash
+mkdir -p ~/hoc/mo_hinh
+curl -L -o ~/hoc/mo_hinh/yolo11n.onnx https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.onnx
+cd ~/hoc/do_vui && ../vieneu-venv/bin/python nhac_nghi.py --thu   # thử ngay: đếm 1 phút rồi nhắc luôn
+```
+
+Thêm vào `crontab -e`:
+
+```
+30 18 * * * XDG_RUNTIME_DIR=/run/user/1000 $HOME/hoc/vieneu-venv/bin/python $HOME/hoc/do_vui/nhac_nghi.py >> $HOME/hoc/log.txt 2>&1
+```
+
 Thoát trò chơi bằng **Alt+F4**. Muốn tắt tự mở: xoá file `~/.config/autostart/do-vui.desktop`.
 
 ### Chào buổi sáng và chúc ngủ ngon
