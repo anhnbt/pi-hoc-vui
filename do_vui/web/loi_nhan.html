@@ -26,6 +26,12 @@
   .san button:active, .gui:active { filter: brightness(1.2); }
   #trang-thai { min-height: 1.3em; text-align: center; color: var(--phu); }
   .dem { text-align: right; font-size: 13px; color: var(--phu); margin-top: -8px; }
+  .nghi { background: var(--the); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  #nghi-dong { text-align: center; font-size: 16px; }
+  #nghi-nut { height: 52px; border: none; border-radius: 14px; background: var(--nhan); color: #2b2100;
+    font: inherit; font-size: 17px; font-weight: 700; }
+  #nghi-nut:disabled { opacity: .5; }
+  #nghi-nut:active { filter: brightness(1.2); }
   a { text-align: center; color: var(--phu); font-size: 14px; }
 </style>
 </head>
@@ -37,6 +43,12 @@
     <button data-loa="camera" class="chon">📷 Loa camera</button>
     <button data-loa="pi">🔊 Loa Pi</button>
     <button data-loa="ca_hai">Cả hai</button>
+  </div>
+
+  <h2>Màn hình chờ buổi sáng</h2>
+  <div class="nghi">
+    <p id="nghi-dong">Đang tải…</p>
+    <button id="nghi-nut" disabled>…</button>
   </div>
 
   <h2>Câu có sẵn (giọng hay, bấm là đọc)</h2>
@@ -81,6 +93,39 @@ document.getElementById("san").innerHTML = (window.CAU_SAN || []).map(function (
 document.getElementById("san").addEventListener("click", function (e) {
   var nut = e.target.closest("button");
   if (nut) gui(nut.textContent);
+});
+
+// Nút "con nghỉ học": áp dụng cho buổi sáng đi học kế tiếp, do máy chủ tính
+var THU = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+var nghi_dong = document.getElementById("nghi-dong"), nghi_nut = document.getElementById("nghi-nut");
+var nghi_nay = false;
+
+function hien_nghi(d) {
+  var p = String(d.ngay).split("-");
+  var ngay = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  var nhan = "Sáng " + THU[ngay.getDay()] + " " + Number(p[2]) + "/" + Number(p[1]);
+  nghi_nay = !!d.nghi;
+  nghi_dong.textContent = nhan + (nghi_nay ? ": con nghỉ học ✅" : ": con đi học");
+  nghi_nut.textContent = nghi_nay ? "Bấm: con đi học lại" : "Bấm: con nghỉ học";
+  nghi_nut.disabled = false;
+}
+
+function loi_nghi() {
+  nghi_dong.textContent = "❌ Không kết nối được với Pi";
+  nghi_nut.disabled = false;
+}
+
+function doc_nghi(r) {
+  if (!r.ok) throw new Error("loi");
+  return r.json();
+}
+
+fetch("/nghi-hoc").then(doc_nghi).then(hien_nghi).catch(loi_nghi);
+
+nghi_nut.addEventListener("click", function () {
+  nghi_nut.disabled = true;
+  fetch("/nghi-hoc?nghi=" + (nghi_nay ? "0" : "1"), { method: "POST" })
+    .then(doc_nghi).then(hien_nghi).catch(loi_nghi);
 });
 
 document.getElementById("gui").addEventListener("click", function () { gui(o_chu.value); });

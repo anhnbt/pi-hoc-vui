@@ -154,6 +154,24 @@ Chạy `crontab -e` và thêm hai dòng sau. Đổi `1000` thành kết quả c�
 - Cron chạy sớm hơn giờ đọc 1–2 phút, vì Pi 4 cần khoảng 1 phút để tạo giọng.
 - Thiếu `XDG_RUNTIME_DIR` thì chạy tay có tiếng nhưng chạy bằng cron sẽ im lặng.
 
+### Màn hình chờ
+
+TV tự hiện màn hình chờ theo giờ (cron cũ không đổi), đọc nhắc bằng giọng đã tạo sẵn:
+
+- **Sáng, thứ Hai đến thứ Sáu, 6:30–7:15:** 8 việc cần làm trước khi đi học. Uống nước được nhắc lại lúc 6:54.
+  Đố vui bị khoá từ 7:05 đến 7:15 để bé kịp chuẩn bị.
+- **Tối:** 18:00 nhắc đi tắm, 20:00 nhắc dọn đồ chơi, 22:00 chúc ngủ ngon rồi màn hình chuyển sang đen.
+- **Nghỉ học:** trên `http://<ip-của-pi>:8080/loi-nhan` có nút **nghỉ học / đi học lại** cho buổi sáng đi học kế tiếp
+  (trước 7:15 là hôm nay, sau đó là ngày đi học tiếp theo, bỏ qua thứ Bảy, Chủ nhật). Bật nghỉ thì sáng đó không hiện việc, không nhắc.
+
+Tạo giọng đọc một lần (mất vài phút trên Pi 4):
+
+```bash
+cd ~/hoc/do_vui && ../vieneu-venv/bin/python tao_man_cho.py
+```
+
+Mọi mốc giờ nằm trong [do_vui/lich.py](do_vui/lich.py). Chạy test: `python -m unittest discover -s do_vui/tests`.
+
 ## Cấu trúc
 
 ```
@@ -162,10 +180,14 @@ chuc_ngu_ngon.py      lời chúc ngủ ngon
 do_vui/
   tao_cau_hoi.py      kho câu hỏi + tạo giọng đọc → web/cau_hoi.js, web/am_thanh/
   tao_be.py           từ vựng Bé tập nói + giọng đọc → web/be_du_lieu.js
+  tao_man_cho.py      giọng đọc cho màn hình chờ
+  lich.py             các mốc giờ sáng, tối của màn hình chờ
+  tests/              test (python -m unittest discover -s do_vui/tests)
   may_chu.py          máy chủ web (cổng 8080), nhận phím từ điều khiển TV và điện thoại
   cai_dat.sh          cài dịch vụ systemd + tự mở khi bật Pi
   web/index.html      trò chơi trên TV
   web/tay_cam.html    tay cầm điện thoại
+  web/man_cho.html    màn hình chờ trên TV
   web/be_tv.html      Bé tập nói trên TV
   web/be_tay_cam.html bảng hình cho bé chạm trên điện thoại
 ```
