@@ -60,7 +60,26 @@ Thêm câu hỏi: sửa danh sách trong `tao_cau_hoi.py` rồi chạy lại. C�
 |---|---|---|---|
 | Bàn phím | phím số 1–4, hoặc mũi tên | Enter | R |
 | Điện thoại | nút màu 1–4 | OK ▶ | 🔊 |
+| Hộp nút Arduino | nút 1–4 | OK | Nghe lại |
 | Điều khiển TV (CEC) | nút màu, hoặc mũi tên | OK | Back |
+
+### Hộp nút bấm Arduino Nano
+
+Hộp gồm 6 nút và 1 còi, nối với Arduino Nano cắm USB vào Pi. Mỗi lần bấm, Nano kêu "bíp" và gửi phím cho máy chủ, giống tay cầm điện thoại.
+Mỗi nút nối từ chân Dx xuống GND, không cần điện trở. Với nút 4 chân, dùng hai chân chéo nhau.
+
+| Chân Nano | D2 | D3 | D4 | D5 | D6 | D7 | D8 |
+|---|---|---|---|---|---|---|---|
+| Nối với | nút 1 (đỏ) | nút 2 (xanh lá) | nút 3 (vàng) | nút 4 (xanh dương) | OK | Nghe lại | chân + của còi |
+
+Nạp chương trình từ Pi (cài [arduino-cli](https://github.com/arduino/arduino-cli/releases) trước, rồi chạy `arduino-cli core install arduino:avr`).
+Nano bản CH340 giá rẻ thường cần `cpu=atmega328old`:
+
+```bash
+systemctl --user stop do-vui   # máy chủ đang giữ cổng USB của Nano
+arduino-cli compile -u -p /dev/ttyUSB0 -b arduino:avr:nano:cpu=atmega328old ~/hoc/arduino/hop_nut
+systemctl --user start do-vui
+```
 
 **Hai bé dùng chung một TV:** chạm hình trên tay cầm của em thì TV chuyển sang Bé tập nói. Bấm tay cầm Đố vui thì TV quay về trò của anh. Nếu anh đang chơi dở một lượt, TV không chuyển sang trò của em.
 
@@ -88,6 +107,19 @@ qua kênh âm thanh ngược của RTSP theo chuẩn ONVIF (G.711 A-law 8 kHz).
 hoặc tự gõ (tối đa 200 ký tự). Câu có sẵn dùng giọng VieNeu đọc trước (`../vieneu-venv/bin/python tao_loi_nhan.py`).
 Câu gõ tay được Piper đọc ngay, mất khoảng 1 giây. Piper chạy thường trực trong `~/hoc/venv`, cùng giọng `vi_VN-vais1000-medium` ở `~/hoc`.
 Mỗi lời nhắn được ghi vào `log.txt`.
+
+### Dùng từ xa (4G, công ty)
+
+Máy chủ không có mật khẩu, nên **đừng mở cổng 8080 trên router**: ai dò được IP nhà bạn cũng sẽ xem được camera và nói vào loa.
+Hãy dùng [Tailscale](https://tailscale.com), một mạng riêng ảo giữa các thiết bị cùng một tài khoản:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up --hostname=pi-hoc-vui   # mở link nó in ra và đăng nhập
+```
+
+Cài app Tailscale trên điện thoại, đăng nhập cùng tài khoản và bật VPN.
+Sau đó mở `http://pi-hoc-vui:8080/loi-nhan` (hoặc dùng IP `100.x.y.z` mà lệnh `tailscale ip -4` in ra).
 
 ### Nhắc nghỉ giữa buổi học gia sư
 

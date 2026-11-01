@@ -1,7 +1,9 @@
 """Máy chủ cho trò Đố vui: phục vụ trang web, và chuyển phím từ điều khiển TV (HDMI-CEC)
 hoặc tay cầm điện thoại (/tay-cam) sang trang."""
-import array, collections, http.server, json, math, os, queue, re, socket, subprocess, tempfile, threading, time
+import array, collections, glob, http.server, json, math, os, queue, re, socket, subprocess, tempfile, threading, time
 from urllib.parse import urlparse, parse_qs, quote
+
+import serial  # pyserial, có sẵn trên Raspberry Pi OS
 
 import loa_camera
 from tao_be import CANH_BAO_KHOC
@@ -135,6 +137,23 @@ def nghe_khoc():
         time.sleep(10)  # camera mất mạng hoặc khởi động lại: đợi rồi nghe lại
 
 
+def nghe_hop_nut():
+    """Hộp nút bấm Arduino Nano cắm USB (arduino/hop_nut): mỗi dòng nó gửi là tên một phím.
+    Rút ra cắm lại lúc nào cũng được, cứ 5 giây tìm lại một lần."""
+    while True:
+        cong = sorted(glob.glob("/dev/serial/by-id/*1a86*"))  # 1a86 = chip USB CH340 của Nano
+        if cong:
+            try:
+                with serial.Serial(cong[0], 115200) as s:
+                    for dong in s:
+                        phim = dong.decode(errors="ignore").strip()
+                        if phim in PHIM_HOP_LE:
+                            gui_phim(phim)
+            except (serial.SerialException, OSError):
+                pass
+        time.sleep(5)
+
+
 def nghe_cec():
     # Đăng ký Pi với TV là "đầu phát" để TV chuyển phím điều khiển sang
     subprocess.run(["cec-ctl", "-d", CEC, "--playback", "--osd-name", "Do vui"], capture_output=True)
@@ -237,6 +256,7 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     threading.Thread(target=nghe_cec, daemon=True).start()
     threading.Thread(target=nghe_khoc, daemon=True).start()
+    threading.Thread(target=nghe_hop_nut, daemon=True).start()
 
     def mo_san_piper():
         with khoa_noi:
