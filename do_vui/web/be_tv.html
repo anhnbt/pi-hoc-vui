@@ -13,7 +13,8 @@
   .man.hien { display: flex; }
   h1 { font-size: 10vh; }
   .goi-y { font-size: 4vh; opacity: .7; }
-  #emoji { font-size: 50vh; line-height: 1.1; }
+  /* Chỉ định font emoji màu, nếu không DejaVu sẽ vẽ một số con vật (🐱 🐶...) thành nét đen trắng */
+  #emoji { font-size: 50vh; line-height: 1.1; font-family: "Noto Color Emoji", sans-serif; }
   #chu { font-size: 14vh; font-weight: 700; }
   .nay { animation: nay .7s cubic-bezier(.3, 1.6, .5, 1); }
   @keyframes nay { from { transform: scale(.2) rotate(-12deg); opacity: 0; } }
