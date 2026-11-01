@@ -11,6 +11,7 @@ nhắc giờ sáng tối. Toàn bộ chạy **trong nhà, không cần internet*
 |---|---|
 | 🎮 **Đố vui trên TV** ([do_vui/](do_vui)) | 66 câu: cộng trừ có nhớ, bảng nhân 2 và 5, chính tả (s/x, l/n, tr/ch, hỏi/ngã), tìm vần. Mỗi lượt 10 câu, có giọng đọc, có sao thưởng. |
 | 📱 **Tay cầm điện thoại** | Mở `http://<ip-của-pi>:8080/tay-cam` trên điện thoại: 4 nút màu to, nút OK, nút Nghe lại. |
+| 👶 **Bé tập nói** (cho bé khoảng 2 tuổi) | Bé chạm hình trên điện thoại (`http://<ip-của-pi>:8080/be`) hoặc đập bàn phím: TV hiện hình to và đọc *"Con mèo. Meo meo! Mèo."*. Có 32 từ trong 5 nhóm: con vật, nhà mình, ăn uống, đồ chơi, cơ thể. |
 | ☀️ **Chào buổi sáng** ([chao_sang.py](chao_sang.py)) | Đọc thứ, ngày tháng và một câu đố cộng, rồi đọc đáp án sau 15 giây. |
 | 🌙 **Chúc ngủ ngon** ([chuc_ngu_ngon.py](chuc_ngu_ngon.py)) | Nhắc ngày mai đi học hay nghỉ, đọc một câu ca dao (2 lần), nhắc đánh răng. |
 
@@ -48,6 +49,7 @@ sudo timedatectl set-timezone Asia/Ho_Chi_Minh
 ```bash
 cd ~/hoc/do_vui
 ../vieneu-venv/bin/python tao_cau_hoi.py   # tạo giọng đọc cho kho câu hỏi, Pi 4 mất khoảng 10 phút
+../vieneu-venv/bin/python tao_be.py        # tạo giọng đọc cho Bé tập nói, khoảng 5 phút
 bash cai_dat.sh                            # máy chủ tự chạy + trò chơi tự mở khi bật Pi
 ./mo_tro_choi.sh                           # mở ngay, không cần khởi động lại
 ```
@@ -59,6 +61,8 @@ Thêm câu hỏi: sửa danh sách trong `tao_cau_hoi.py` rồi chạy lại. C�
 | Bàn phím | phím số 1–4, hoặc mũi tên | Enter | R |
 | Điện thoại | nút màu 1–4 | OK ▶ | 🔊 |
 | Điều khiển TV (CEC) | nút màu, hoặc mũi tên | OK | Back |
+
+**Hai bé dùng chung một TV:** chạm hình trên tay cầm của em thì TV chuyển sang Bé tập nói. Bấm tay cầm Đố vui thì TV quay về trò của anh. Nếu anh đang chơi dở một lượt, TV không chuyển sang trò của em.
 
 Thoát trò chơi bằng **Alt+F4**. Muốn tắt tự mở: xoá file `~/.config/autostart/do-vui.desktop`.
 
@@ -81,10 +85,13 @@ chao_sang.py          lời chào buổi sáng
 chuc_ngu_ngon.py      lời chúc ngủ ngon
 do_vui/
   tao_cau_hoi.py      kho câu hỏi + tạo giọng đọc → web/cau_hoi.js, web/am_thanh/
+  tao_be.py           từ vựng Bé tập nói + giọng đọc → web/be_du_lieu.js
   may_chu.py          máy chủ web (cổng 8080), nhận phím từ điều khiển TV và điện thoại
   cai_dat.sh          cài dịch vụ systemd + tự mở khi bật Pi
   web/index.html      trò chơi trên TV
   web/tay_cam.html    tay cầm điện thoại
+  web/be_tv.html      Bé tập nói trên TV
+  web/be_tay_cam.html bảng hình cho bé chạm trên điện thoại
 ```
 
 ## Giấy phép

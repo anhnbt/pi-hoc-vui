@@ -37,17 +37,20 @@
     <button class="ok" data-phim="chon">OK ▶</button>
   </div>
   <p id="loi"></p>
+  <a href="/be" style="text-align: center; color: var(--phu); font-size: 14px">Sang tay cầm Bé tập nói của em →</a>
 <script>
 const loi = document.getElementById("loi");
+// Bấm là ăn ngay, không phải chờ nhả tay như click. iOS 12 (iPhone 6) chưa có pointerdown nên dùng touchstart;
+// cũng vì Safari cũ mà ở đây không dùng cú pháp mới như ?.
+const SU_KIEN_BAM = "onpointerdown" in window ? "pointerdown" : "touchstart";
 document.querySelectorAll("button").forEach(nut => {
-  // pointerdown để bấm là ăn ngay, không phải chờ nhả tay như click
-  nut.addEventListener("pointerdown", e => {
+  nut.addEventListener(SU_KIEN_BAM, e => {
     e.preventDefault();
-    navigator.vibrate?.(30);
+    if (navigator.vibrate) navigator.vibrate(30);
     fetch("/bam?phim=" + nut.dataset.phim, { method: "POST" })
       .then(r => { loi.textContent = r.ok ? "" : "Lỗi " + r.status; })
       .catch(() => { loi.textContent = "Không kết nối được với Pi"; });
-  });
+  }, { passive: false });
 });
 </script>
 </body>

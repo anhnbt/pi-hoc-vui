@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Bé tập nói</title>
+<style>
+  :root { --nen: #fff3c4; --chu: #3a2a10; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--nen); color: var(--chu);
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif; transition: background .4s; }
+  .man { display: none; height: 100%; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3vh; text-align: center; padding: 4vh 6vw; }
+  .man.hien { display: flex; }
+  h1 { font-size: 10vh; }
+  .goi-y { font-size: 4vh; opacity: .7; }
+  #emoji { font-size: 50vh; line-height: 1.1; }
+  #chu { font-size: 14vh; font-weight: 700; }
+  .nay { animation: nay .7s cubic-bezier(.3, 1.6, .5, 1); }
+  @keyframes nay { from { transform: scale(.2) rotate(-12deg); opacity: 0; } }
+</style>
+</head>
+<body>
+
+<section class="man hien" id="man-cho">
+  <div style="font-size: 30vh">👶</div>
+  <h1>Bé tập nói</h1>
+  <p class="goi-y">Bấm phím bất kỳ, hoặc chạm hình trên điện thoại: <b id="dia-chi"></b></p>
+</section>
+
+<section class="man" id="man-hinh">
+  <div id="emoji"></div>
+  <div id="chu"></div>
+</section>
+
+<script src="be_du_lieu.js"></script>
+<script>
+const loa = new Audio();
+const tat_ca = window.BE.nhom.flatMap(n => n.muc.map(m => ({ ...m, mau: n.mau })));
+let dang_noi = false, truoc = null;
+
+loa.onended = loa.onerror = () => { dang_noi = false; };
+
+function hien(ma) {
+  const m = tat_ca.find(x => x.ma === ma);
+  if (!m) return;
+  truoc = m;
+  document.getElementById("man-cho").classList.remove("hien");
+  document.getElementById("man-hinh").classList.add("hien");
+  document.body.style.background = m.mau;
+  for (const [id, noi_dung] of [["emoji", m.emoji], ["chu", m.chu]]) {
+    const o = document.getElementById(id);
+    o.textContent = noi_dung;
+    o.classList.remove("nay");
+    void o.offsetWidth;  // để hiệu ứng nảy chạy lại cả khi bấm cùng một hình
+    o.classList.add("nay");
+  }
+  dang_noi = true;
+  loa.src = m.am;
+  loa.play().catch(() => { dang_noi = false; });
+}
+
+function ngau_nhien() {
+  const con_lai = tat_ca.filter(m => m !== truoc);
+  hien(con_lai[Math.floor(Math.random() * con_lai.length)].ma);
+}
+
+// Bé đập bàn phím: phím nào cũng ra hình mới, nhưng đợi đọc xong mới đổi để bé kịp nghe
+addEventListener("keydown", e => {
+  e.preventDefault();
+  if (e.key === "Escape") location = "/";
+  else if (!dang_noi) ngau_nhien();
+});
+
+// Phím từ điện thoại: hình của bé thì hiện ngay; phím của trò Đố vui thì quay về trò đó
+new EventSource("/phim").onmessage = e => {
+  if (e.data.startsWith("be:")) hien(e.data.slice(3));
+  else location = "/";
+};
+fetch("/dia-chi").then(r => r.text()).then(t => {
+  document.getElementById("dia-chi").textContent = t.replace("/tay-cam", "/be");
+});
+
+if (location.hash) hien(location.hash.slice(1));
+else { loa.src = window.BE.chao; loa.play().catch(() => {}); }
+</script>
+</body>
+</html>

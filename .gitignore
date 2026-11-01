@@ -6,6 +6,7 @@ __pycache__/
 # Tạo ra bởi tao_cau_hoi.py
 do_vui/web/am_thanh/
 do_vui/web/cau_hoi.js
+do_vui/web/be_du_lieu.js
 do_vui/mo_tro_choi.sh
 *.log
 log.txt

@@ -52,7 +52,9 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         url = urlparse(self.path)
         phim = parse_qs(url.query).get("phim", [""])[0]
-        if url.path != "/bam" or phim not in PHIM_HOP_LE:
+        # Phím Đố vui, hoặc "be:<mã hình>" từ tay cầm Bé tập nói
+        hop_le = phim in PHIM_HOP_LE or re.fullmatch(r"be:[a-z_]+", phim)
+        if url.path != "/bam" or not hop_le:
             return self.tra_loi_chu(400)
         gui_phim(phim)
         self.tra_loi_chu(200)
@@ -60,6 +62,8 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/tay-cam":
             self.path = "/tay_cam.html"
+        if self.path == "/be":
+            self.path = "/be_tay_cam.html"
         if self.path == "/dia-chi":
             return self.tra_loi_chu(200, f"http://{dia_chi_ip()}:8080/tay-cam")
         if self.path != "/phim":

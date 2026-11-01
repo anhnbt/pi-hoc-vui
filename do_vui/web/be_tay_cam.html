@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bé tập nói</title>
+<style>
+  :root { --nen: #fff8e1; --chu: #3a2a10; --vien: rgba(0,0,0,.08); }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { height: 100%; background: var(--nen); color: var(--chu);
+    font-family: system-ui, "Noto Sans", sans-serif; touch-action: manipulation; }
+  body { display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; }
+  .the { display: flex; gap: 8px; }
+  .the button { flex: 1; height: 64px; font-size: 32px; border-radius: 16px; border: 3px solid transparent;
+    background: #fff; box-shadow: 0 1px 3px var(--vien); }
+  .the button.dang-chon { border-color: var(--chu); }
+  h1 { font-size: 20px; text-align: center; }
+  .luoi { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 12px; }
+  .luoi button { border: none; border-radius: 24px; font-size: 18vw; line-height: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    transition: transform .08s; }
+  .luoi button small { font-size: 18px; font-weight: 600; color: var(--chu); }
+  .luoi button:active { transform: scale(.92); }
+  a { text-align: center; color: var(--chu); opacity: .6; font-size: 14px; }
+</style>
+</head>
+<body>
+  <div class="the" id="the"></div>
+  <h1 id="ten-nhom"></h1>
+  <div class="luoi" id="luoi"></div>
+  <a href="/tay-cam">Sang tay cầm Đố vui của anh →</a>
+<script src="be_du_lieu.js"></script>
+<script>
+const { nhom } = window.BE;
+let dang_chon = 0;
+
+function ve() {
+  const n = nhom[dang_chon];
+  document.getElementById("the").innerHTML = nhom.map((x, i) =>
+    `<button class="${i === dang_chon ? "dang-chon" : ""}" data-i="${i}" aria-label="${x.ten}">${x.emoji}</button>`).join("");
+  document.getElementById("ten-nhom").textContent = n.ten;
+  document.getElementById("luoi").innerHTML = n.muc.map(m =>
+    `<button style="background:${n.mau}" data-ma="${m.ma}">${m.emoji}<small>${m.chu}</small></button>`).join("");
+}
+
+// Chạm là ăn ngay; bé 2 tuổi hay chạm rồi giữ tay, không nhả ra như click. iOS 12 (iPhone 6) chưa có
+// pointerdown nên dùng touchstart; cũng vì Safari cũ mà ở đây không dùng cú pháp mới như ?.
+const SU_KIEN_BAM = "onpointerdown" in window ? "pointerdown" : "touchstart";
+
+document.getElementById("the").addEventListener(SU_KIEN_BAM, e => {
+  const nut = e.target.closest("button");
+  if (nut) { dang_chon = +nut.dataset.i; ve(); }
+});
+document.getElementById("luoi").addEventListener(SU_KIEN_BAM, e => {
+  const nut = e.target.closest("button");
+  if (!nut) return;
+  e.preventDefault();
+  if (navigator.vibrate) navigator.vibrate(30);
+  fetch("/bam?phim=be:" + nut.dataset.ma, { method: "POST" });
+}, { passive: false });
+
+ve();
+</script>
+</body>
+</html>
