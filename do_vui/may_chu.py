@@ -1,7 +1,10 @@
 """Máy chủ cho trò Đố vui: phục vụ trang web, và chuyển phím từ điều khiển TV (HDMI-CEC)
 hoặc tay cầm điện thoại (/tay-cam) sang trang."""
-import http.server, os, queue, re, socket, subprocess, threading
+import array, collections, http.server, math, os, queue, re, socket, subprocess, threading, time
 from urllib.parse import urlparse, parse_qs, quote
+
+from tao_be import CANH_BAO_KHOC
+from tao_cau_hoi import AM_THANH, ten_file
 
 THU_MUC = os.path.dirname(os.path.abspath(__file__))
 WEB = os.path.join(THU_MUC, "web")
@@ -18,6 +21,13 @@ PHIM_HOP_LE = set(PHIM_CEC.values()) | {"camera"}
 # (dòng CAM_MAT_KHAU=...), không có file đó thì tắt tính năng camera.
 CAM_IP = "192.168.1.15"
 CAM_ENV = os.path.expanduser("~/hoc/camera.env")
+
+# Báo khi em bé khóc: đo độ to micro camera mỗi nửa giây (chỉ đo, không ghi âm lại).
+# Phòng yên lặng khoảng -74 dBFS, người lớn nói chuyện gần camera khoảng -30.
+NGUONG_KHOC = float(os.environ.get("NGUONG_KHOC", -25))  # dBFS, to hơn mức này là "ồn"
+SO_LAN_ON = 6                # 6 trong 10 lần đo gần nhất (khoảng 3 giây) đều ồn thì báo
+NGHI_GIUA_HAI_LAN = 120      # giây, để không báo dồn dập khi bé khóc lâu
+NHAT_KY = os.path.expanduser("~/hoc/log.txt")
 
 nguoi_nghe = []  # mỗi trang đang mở có một hàng đợi phím
 
@@ -41,6 +51,40 @@ def dia_chi_camera():
     except (OSError, KeyError):
         return None
     return f"rtsp://admin:{quote(mat_khau, safe='')}@{CAM_IP}:554/cam/realmonitor?channel=1&subtype=1"
+
+
+def bao_khoc(db):
+    gui_phim("camera")  # TV chuyển sang camera, trừ khi anh đang chơi dở một lượt
+    subprocess.Popen(["aplay", "-q", os.path.join(AM_THANH, ten_file(CANH_BAO_KHOC))])
+    with open(NHAT_KY, "a", encoding="utf-8") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} Báo em bé khóc (to nhất {db:.0f} dBFS)\n")
+
+
+def nghe_khoc():
+    lan_truoc = 0
+    while True:
+        rtsp = dia_chi_camera()
+        if not rtsp:
+            time.sleep(60)
+            continue
+        p = subprocess.Popen(
+            ["ffmpeg", "-v", "error", "-rtsp_transport", "tcp", "-i", rtsp,
+             "-vn", "-ac", "1", "-ar", "8000", "-f", "s16le", "-"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        gan_day = collections.deque(maxlen=10)
+        to_nhat = -100
+        while len(khoi := p.stdout.read(8000)) == 8000:  # nửa giây: 4000 mẫu 16-bit
+            mau = array.array("h", khoi)
+            db = 20 * math.log10(math.sqrt(sum(x * x for x in mau) / len(mau)) / 32768 or 1e-9)
+            gan_day.append(db > NGUONG_KHOC)
+            to_nhat = max(to_nhat, db) if any(gan_day) else -100
+            if sum(gan_day) >= SO_LAN_ON and time.time() - lan_truoc > NGHI_GIUA_HAI_LAN:
+                lan_truoc = time.time()
+                bao_khoc(to_nhat)
+                gan_day.clear()
+        p.kill()
+        p.wait()
+        time.sleep(10)  # camera mất mạng hoặc khởi động lại: đợi rồi nghe lại
 
 
 def nghe_cec():
@@ -131,4 +175,5 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     threading.Thread(target=nghe_cec, daemon=True).start()
+    threading.Thread(target=nghe_khoc, daemon=True).start()
     http.server.ThreadingHTTPServer(("0.0.0.0", 8080), XuLy).serve_forever()

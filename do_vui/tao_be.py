@@ -52,10 +52,11 @@ NHOM = [  # (tên nhóm, emoji đại diện, màu nền, [(mã, emoji, chữ hi
     ]),
 ]
 CHAO = "Chào bé! Mình cùng tập nói nhé!"
+CANH_BAO_KHOC = "Bố mẹ ơi! Em bé đang khóc đấy!"  # may_chu.py đọc khi micro camera nghe tiếng khóc
 
 
 def main():
-    can_doc = [CHAO] + [doc for *_, muc in NHOM for *_, doc in muc]
+    can_doc = [CHAO, CANH_BAO_KHOC] + [doc for *_, muc in NHOM for *_, doc in muc]
     os.makedirs(AM_THANH, exist_ok=True)
     con_thieu = [c for c in can_doc if not os.path.exists(os.path.join(AM_THANH, ten_file(c)))]
     print(f"{len(can_doc)} câu, cần tạo giọng {len(con_thieu)} câu", flush=True)

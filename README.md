@@ -76,6 +76,11 @@ printf 'CAM_MAT_KHAU=%s\n' 'MAT_KHAU' > ~/hoc/camera.env && chmod 600 ~/hoc/came
 Địa chỉ camera đặt trong `CAM_IP` ở đầu `may_chu.py`. Máy chủ dùng ffmpeg đổi luồng phụ 640×480 sang MJPEG cho trình duyệt,
 và chỉ chạy ffmpeg khi đang có màn hình xem camera.
 
+**Báo em bé khóc:** máy chủ nghe micro camera và đo độ to mỗi nửa giây. Pi chỉ đo, không ghi âm lại.
+Khi có tiếng to khoảng 3 giây liền, loa Pi đọc *"Bố mẹ ơi! Em bé đang khóc đấy!"*, TV tự chuyển sang camera
+(trừ khi anh đang chơi dở một lượt) và `~/hoc/log.txt` ghi lại giờ báo. Sau mỗi lần báo, máy chủ nghỉ 2 phút.
+Ngưỡng mặc định là -25 dBFS (`NGUONG_KHOC` trong `may_chu.py`): báo nhầm nhiều thì tăng lên (ví dụ -20), không báo thì hạ xuống (ví dụ -30).
+
 Thoát trò chơi bằng **Alt+F4**. Muốn tắt tự mở: xoá file `~/.config/autostart/do-vui.desktop`.
 
 ### Chào buổi sáng và chúc ngủ ngon
