@@ -84,6 +84,11 @@ Ngưỡng mặc định là -25 dBFS (`NGUONG_KHOC` trong `may_chu.py`): báo nh
 **Nói qua loa camera:** `python3 do_vui/loa_camera.py <file.wav>` phát một file âm thanh ra loa camera,
 qua kênh âm thanh ngược của RTSP theo chuẩn ONVIF (G.711 A-law 8 kHz).
 
+**Gửi lời nhắn từ điện thoại:** mở `http://<ip-của-pi>:8080/loi-nhan`, chọn loa camera, loa Pi hoặc cả hai, rồi bấm một câu có sẵn
+hoặc tự gõ (tối đa 200 ký tự). Câu có sẵn dùng giọng VieNeu đọc trước (`../vieneu-venv/bin/python tao_loi_nhan.py`).
+Câu gõ tay được Piper đọc ngay, mất khoảng 1 giây. Piper chạy thường trực trong `~/hoc/venv`, cùng giọng `vi_VN-vais1000-medium` ở `~/hoc`.
+Mỗi lời nhắn được ghi vào `log.txt`.
+
 ### Nhắc nghỉ giữa buổi học gia sư
 
 Cô dạy 18:30–20:00 nhưng không cố định thứ nào. Cron chạy [do_vui/nhac_nghi.py](do_vui/nhac_nghi.py) lúc 18:30 mỗi ngày:

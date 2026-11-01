@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gửi lời nhắn</title>
+<style>
+  :root { --nen: #1b2a4a; --the: #34466e; --chu: #ffffff; --phu: #b9c6e4; --nhan: #f5b400; }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--nen); color: var(--chu); font-family: system-ui, "Noto Sans", sans-serif; }
+  body { display: flex; flex-direction: column; gap: 14px; padding: 16px; max-width: 560px; margin: 0 auto; }
+  h1 { font-size: 22px; }
+  h2 { font-size: 15px; color: var(--phu); font-weight: 600; }
+  .loa { display: flex; gap: 8px; }
+  .loa button { flex: 1; height: 48px; border-radius: 14px; border: 2px solid transparent;
+    background: var(--the); color: var(--chu); font: inherit; font-size: 15px; }
+  .loa button.chon { border-color: var(--nhan); background: #4a5f8f; }
+  textarea { width: 100%; min-height: 96px; border-radius: 14px; border: none; padding: 12px;
+    font: inherit; font-size: 17px; resize: vertical; }
+  .gui { height: 56px; border: none; border-radius: 16px; background: var(--nhan); color: #2b2100;
+    font: inherit; font-size: 18px; font-weight: 700; }
+  .gui:disabled { opacity: .5; }
+  .san { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .san button { min-height: 56px; padding: 8px; border: none; border-radius: 14px; background: var(--the);
+    color: var(--chu); font: inherit; font-size: 15px; text-align: left; }
+  .san button:active, .gui:active { filter: brightness(1.2); }
+  #trang-thai { min-height: 1.3em; text-align: center; color: var(--phu); }
+  .dem { text-align: right; font-size: 13px; color: var(--phu); margin-top: -8px; }
+  a { text-align: center; color: var(--phu); font-size: 14px; }
+</style>
+</head>
+<body>
+  <h1>✉️ Gửi lời nhắn</h1>
+
+  <h2>Phát ở đâu?</h2>
+  <div class="loa" id="loa">
+    <button data-loa="camera" class="chon">📷 Loa camera</button>
+    <button data-loa="pi">🔊 Loa Pi</button>
+    <button data-loa="ca_hai">Cả hai</button>
+  </div>
+
+  <h2>Câu có sẵn (giọng hay, bấm là đọc)</h2>
+  <div class="san" id="san"></div>
+
+  <h2>Hoặc tự gõ</h2>
+  <textarea id="chu" maxlength="200" placeholder="Ví dụ: Con ơi, bố về muộn, con ăn cơm trước nhé!"></textarea>
+  <p class="dem"><span id="so-ky-tu">0</span>/200</p>
+  <button class="gui" id="gui">Gửi ▶</button>
+  <p id="trang-thai"></p>
+
+  <a href="/tay-cam">← Về tay cầm Đố vui</a>
+<script src="loi_nhan.js"></script>
+<script>
+// Viết theo kiểu Safari cũ (iPhone 6, iOS 12) đọc được: không dùng ?. hay ??
+var loa = "camera", dang_gui = false;
+var o_chu = document.getElementById("chu"), trang_thai = document.getElementById("trang-thai");
+
+document.getElementById("loa").addEventListener("click", function (e) {
+  var nut = e.target.closest("button");
+  if (!nut) return;
+  loa = nut.dataset.loa;
+  document.querySelectorAll("#loa button").forEach(function (b) { b.classList.toggle("chon", b === nut); });
+});
+
+function gui(chu) {
+  chu = chu.trim();
+  if (!chu || dang_gui) return;
+  dang_gui = true;
+  document.getElementById("gui").disabled = true;
+  trang_thai.textContent = "Đang đọc…";
+  fetch("/noi?loa=" + loa, { method: "POST", body: chu })
+    .then(function (r) { return r.text().then(function (t) { return [r.ok, t]; }); })
+    .then(function (kq) { trang_thai.textContent = kq[0] ? "✅ " + kq[1] + ": " + chu : "❌ " + kq[1]; })
+    .catch(function () { trang_thai.textContent = "❌ Không kết nối được với Pi"; })
+    .then(function () { dang_gui = false; document.getElementById("gui").disabled = false; });
+}
+
+document.getElementById("san").innerHTML = (window.CAU_SAN || []).map(function (c) {
+  return "<button>" + c + "</button>";
+}).join("");
+document.getElementById("san").addEventListener("click", function (e) {
+  var nut = e.target.closest("button");
+  if (nut) gui(nut.textContent);
+});
+
+document.getElementById("gui").addEventListener("click", function () { gui(o_chu.value); });
+o_chu.addEventListener("input", function () {
+  document.getElementById("so-ky-tu").textContent = o_chu.value.length;
+});
+</script>
+</body>
+</html>

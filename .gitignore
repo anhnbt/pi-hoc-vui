@@ -24,3 +24,6 @@ thu_*.sh
 thu_*.py
 kiem_tra_tv.sh
 tv.png
+
+# Tạo ra bởi tao_loi_nhan.py
+do_vui/web/loi_nhan.js

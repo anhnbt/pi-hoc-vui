@@ -1,8 +1,9 @@
 """Máy chủ cho trò Đố vui: phục vụ trang web, và chuyển phím từ điều khiển TV (HDMI-CEC)
 hoặc tay cầm điện thoại (/tay-cam) sang trang."""
-import array, collections, http.server, math, os, queue, re, socket, subprocess, threading, time
+import array, collections, http.server, json, math, os, queue, re, socket, subprocess, tempfile, threading, time
 from urllib.parse import urlparse, parse_qs, quote
 
+import loa_camera
 from tao_be import CANH_BAO_KHOC
 from tao_cau_hoi import AM_THANH, ten_file
 
@@ -29,7 +30,15 @@ SO_LAN_ON = 6                # 6 trong 10 lần đo gần nhất (khoảng 3 gi�
 NGHI_GIUA_HAI_LAN = 120      # giây, để không báo dồn dập khi bé khóc lâu
 NHAT_KY = os.path.expanduser("~/hoc/log.txt")
 
+# Lời nhắn từ trang /loi-nhan: câu có sẵn thì phát giọng VieNeu đã đọc trước (tao_loi_nhan.py),
+# câu gõ tay thì đọc ngay bằng Piper chạy thường trực (doc_nhanh.py, trong ~/hoc/venv)
+PIPER_PY = os.path.expanduser("~/hoc/venv/bin/python")
+LOA_HOP_LE = {"camera", "pi", "ca_hai"}
+DAI_TOI_DA = 200  # ký tự
+
 nguoi_nghe = []  # mỗi trang đang mở có một hàng đợi phím
+khoa_noi = threading.Lock()  # mỗi lúc chỉ đọc một lời nhắn
+doc_nhanh = None
 
 
 def dia_chi_ip():
@@ -51,6 +60,45 @@ def dia_chi_camera():
     except (OSError, KeyError):
         return None
     return f"rtsp://admin:{quote(mat_khau, safe='')}@{CAM_IP}:554/cam/realmonitor?channel=1&subtype=1"
+
+
+def mo_piper():
+    """Gọi khi đang giữ khoa_noi. Nạp giọng mất khoảng 10 giây nên máy chủ mở sẵn ngay lúc khởi động."""
+    global doc_nhanh
+    if doc_nhanh is None or doc_nhanh.poll() is not None:
+        doc_nhanh = subprocess.Popen([PIPER_PY, os.path.join(THU_MUC, "doc_nhanh.py")],
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        doc_nhanh.stdout.readline()  # "san_sang"
+
+
+def doc_bang_piper(chu, tep):
+    mo_piper()
+    doc_nhanh.stdin.write(json.dumps({"chu": chu, "tep": tep}) + "\n")
+    doc_nhanh.stdin.flush()
+    if doc_nhanh.stdout.readline().strip() != "xong":
+        raise RuntimeError("Piper không đọc được")
+
+
+def noi_loi_nhan(chu, loa):
+    with khoa_noi:
+        tep = os.path.join(AM_THANH, ten_file(chu))
+        tam = None
+        if not os.path.exists(tep):
+            tam = tep = tempfile.mktemp(suffix=".wav")
+            doc_bang_piper(chu, tep)
+        try:
+            pi = None
+            if loa in ("pi", "ca_hai"):
+                pi = subprocess.Popen(["aplay", "-q", tep])
+            if loa in ("camera", "ca_hai"):
+                loa_camera.phat(tep)
+            if pi:
+                pi.wait()
+        finally:
+            if tam:
+                os.remove(tam)
+    with open(NHAT_KY, "a", encoding="utf-8") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} Lời nhắn ({loa}): {chu}\n")
 
 
 def bao_khoc(db):
@@ -109,6 +157,17 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         url = urlparse(self.path)
+        if url.path == "/noi":
+            loa = parse_qs(url.query).get("loa", ["camera"])[0]
+            do_dai = int(self.headers.get("Content-Length", 0))
+            chu = self.rfile.read(min(do_dai, 4 * DAI_TOI_DA)).decode("utf-8", "replace").strip()
+            if loa not in LOA_HOP_LE or not chu or len(chu) > DAI_TOI_DA:
+                return self.tra_loi_chu(400, "Lời nhắn trống hoặc quá dài")
+            try:
+                noi_loi_nhan(chu, loa)
+            except Exception as loi:
+                return self.tra_loi_chu(500, f"Không đọc được: {loi}")
+            return self.tra_loi_chu(200, "Đã đọc")
         phim = parse_qs(url.query).get("phim", [""])[0]
         # Phím Đố vui, hoặc "be:<mã hình>" từ tay cầm Bé tập nói
         hop_le = phim in PHIM_HOP_LE or re.fullmatch(r"be:[a-z_]+", phim)
@@ -122,6 +181,8 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
             self.path = "/tay_cam.html"
         if self.path == "/be":
             self.path = "/be_tay_cam.html"
+        if self.path == "/loi-nhan":
+            self.path = "/loi_nhan.html"
         if self.path == "/dia-chi":
             return self.tra_loi_chu(200, f"http://{dia_chi_ip()}:8080/tay-cam")
         if urlparse(self.path).path == "/camera.mjpg":
@@ -176,4 +237,9 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     threading.Thread(target=nghe_cec, daemon=True).start()
     threading.Thread(target=nghe_khoc, daemon=True).start()
+
+    def mo_san_piper():
+        with khoa_noi:
+            mo_piper()
+    threading.Thread(target=mo_san_piper, daemon=True).start()
     http.server.ThreadingHTTPServer(("0.0.0.0", 8080), XuLy).serve_forever()
