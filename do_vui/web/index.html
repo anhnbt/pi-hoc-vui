@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Đố vui</title>
+<style>
+  :root {
+    --nen: #1b2a4a; --chu: #ffffff; --phu: #b9c6e4;
+    --do: #e5484d; --xanh-la: #30a46c; --vang: #f5b400; --xanh-duong: #3e7bfa;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--nen); color: var(--chu); overflow: hidden;
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
+  .man { display: none; height: 100%; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4vh; padding: 4vh 6vw; text-align: center; }
+  .man.hien { display: flex; }
+  h1 { font-size: 9vh; }
+  .goi-y { font-size: 4vh; color: var(--phu); }
+  .tien-do { display: flex; gap: 1.5vw; font-size: 5vh; }
+  .tien-do span { opacity: .3; } .tien-do span.xong { opacity: 1; }
+  #cau { font-size: 13vh; font-weight: 700; min-height: 16vh; }
+  #cau.nho { font-size: 8vh; }
+  .luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 3vh 3vw; width: 100%; max-width: 80vw; }
+  .o { height: 20vh; border-radius: 3vh; display: flex; align-items: center; justify-content: center;
+    font-size: 9vh; font-weight: 700; border: 1vh solid transparent; transition: transform .15s;
+    position: relative; cursor: pointer; }
+  .o small { position: absolute; top: 1.5vh; left: 2vh; font-size: 4vh; opacity: .7; }
+  .o:nth-child(1) { background: var(--do); } .o:nth-child(2) { background: var(--xanh-la); }
+  .o:nth-child(3) { background: var(--vang); color: #2b2100; } .o:nth-child(4) { background: var(--xanh-duong); }
+  .o.chon { border-color: var(--chu); transform: scale(1.06); box-shadow: 0 0 4vh rgba(255,255,255,.5); }
+  .o.loai { opacity: .2; }
+  .o.dung { animation: nhay .5s ease 2; }
+  .o.lac { animation: lac .4s; }
+  @keyframes nhay { 50% { transform: scale(1.15); } }
+  @keyframes lac { 25% { transform: translateX(-2vw); } 75% { transform: translateX(2vw); } }
+  #sao { font-size: 12vh; }
+</style>
+</head>
+<body>
+
+<section class="man hien" id="man-dau">
+  <h1>🎈 Đố vui cùng bố 🎈</h1>
+  <p class="goi-y">Bấm nút <b>OK</b> trên điều khiển, hoặc phím <b>Enter</b>, để bắt đầu</p>
+  <p class="goi-y">📱 Tay cầm điện thoại: <b id="dia-chi"></b></p>
+</section>
+
+<section class="man" id="man-choi">
+  <div class="tien-do" id="tien-do"></div>
+  <div id="cau"></div>
+  <div class="luoi" id="luoi"></div>
+</section>
+
+<section class="man" id="man-cuoi">
+  <h1>🎉 Hoàn thành! 🎉</h1>
+  <div id="sao"></div>
+  <p class="goi-y">Bấm <b>OK</b> để chơi lại</p>
+</section>
+
+<script src="cau_hoi.js"></script>
+<script>
+const CO_CAU = { toan: 6, chinh_ta: 2, van: 2 };  // mỗi lượt chơi gồm từng này câu mỗi loại
+const MAU = { do: 0, xanh_la: 1, vang: 2, xanh_duong: 3 };
+
+const loa = new Audio();
+let man = "dau", luot = [], so = 0, sao = 0, sai_lan_nay = false, o_chon = 0, dang_cho = false;
+
+function phat(file) {
+  return new Promise(xong => {
+    loa.onended = loa.onerror = () => xong();
+    loa.src = file;
+    loa.play().catch(() => xong());
+  });
+}
+const ngau_nhien = ds => ds[Math.floor(Math.random() * ds.length)];
+const tron = ds => ds.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+const doi_man = ten => {
+  man = ten;
+  document.querySelectorAll(".man").forEach(m => m.classList.toggle("hien", m.id === "man-" + ten));
+};
+
+function bat_dau() {
+  const { cau_hoi, am } = window.DU_LIEU;
+  luot = tron(Object.entries(CO_CAU).flatMap(([loai, n]) => tron(cau_hoi.filter(c => c.loai === loai)).slice(0, n)));
+  so = 0; sao = 0;
+  doi_man("choi");
+  phat(am.mo_dau).then(hien_cau);
+}
+
+function hien_cau() {
+  const c = luot[so];
+  sai_lan_nay = false; o_chon = 0; dang_cho = false;
+  document.getElementById("tien-do").innerHTML =
+    luot.map((_, i) => `<span class="${i < so ? "xong" : ""}">⭐</span>`).join("");
+  const cau = document.getElementById("cau");
+  cau.textContent = c.hien;
+  cau.classList.toggle("nho", c.loai !== "toan");
+  c.lua_chon = tron([c.dung, ...c.sai]);
+  document.getElementById("luoi").innerHTML =
+    c.lua_chon.map((x, i) => `<div class="o"><small>${i + 1}</small>${x}</div>`).join("");
+  cac_o().forEach((o, i) => o.onclick = () => tra_loi(i));
+  ve_chon();
+  phat(c.am);
+}
+
+const cac_o = () => [...document.querySelectorAll("#luoi .o")];
+function ve_chon() { cac_o().forEach((o, i) => o.classList.toggle("chon", i === o_chon)); }
+
+function di_chuyen(huong) {
+  const o = cac_o(), n = o.length;
+  const buoc = { trai: -1, phai: 1, len: -2, xuong: 2 }[huong];
+  let moi = o_chon + buoc;
+  if (moi < 0 || moi >= n) return;
+  o_chon = moi;
+  ve_chon();
+}
+
+async function tra_loi(i) {
+  const o = cac_o()[i], c = luot[so], { am } = window.DU_LIEU;
+  if (!o || dang_cho || o.classList.contains("loai")) return;
+  o_chon = i; ve_chon();
+  if (c.lua_chon[i] === c.dung) {
+    dang_cho = true;
+    if (!sai_lan_nay) sao++;
+    o.classList.add("dung");
+    await phat(ngau_nhien(am.khen));
+    so++;
+    if (so < luot.length) hien_cau(); else ket_thuc();
+  } else {
+    sai_lan_nay = true;
+    o.classList.add("lac", "loai");
+    setTimeout(() => o.classList.remove("lac"), 400);
+    phat(ngau_nhien(am.sai));
+  }
+}
+
+function ket_thuc() {
+  document.getElementById("sao").textContent = `⭐ ${sao} / ${luot.length} ⭐`;
+  doi_man("cuoi");
+  phat(window.DU_LIEU.am.ket_thuc);
+}
+
+function bam(phim) {
+  if (man !== "choi") { if (phim === "chon") bat_dau(); return; }
+  if (phim === "chon") tra_loi(o_chon);
+  else if (phim in MAU) tra_loi(MAU[phim]);
+  else if (phim === "nghe_lai") phat(luot[so].am);
+  else di_chuyen(phim);
+}
+
+// Bàn phím (để thử trên máy tính) ...
+const PHIM = { ArrowLeft: "trai", ArrowRight: "phai", ArrowUp: "len", ArrowDown: "xuong", Enter: "chon",
+  " ": "chon", "1": "do", "2": "xanh_la", "3": "vang", "4": "xanh_duong", r: "nghe_lai" };
+addEventListener("keydown", e => { if (PHIM[e.key]) { e.preventDefault(); bam(PHIM[e.key]); } });
+// ... chuột (bấm vào màn hình đầu/cuối để bắt đầu) ...
+document.querySelectorAll("#man-dau, #man-cuoi").forEach(m => m.onclick = () => bam("chon"));
+// ... và điều khiển TV hoặc tay cầm điện thoại, do may_chu.py chuyển sang
+new EventSource("/phim").onmessage = e => bam(e.data);
+fetch("/dia-chi").then(r => r.text()).then(t => document.getElementById("dia-chi").textContent = t);
+</script>
+</body>
+</html>

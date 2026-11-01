@@ -1,0 +1,21 @@
+# Môi trường Python
+venv/
+vieneu-venv/
+__pycache__/
+
+# Tạo ra bởi tao_cau_hoi.py
+do_vui/web/am_thanh/
+do_vui/web/cau_hoi.js
+do_vui/mo_tro_choi.sh
+*.log
+log.txt
+
+# Giọng Piper (tải riêng)
+*.onnx
+*.onnx.json
+
+# File thử nghiệm khi dựng dự án
+thu_*.sh
+thu_*.py
+kiem_tra_tv.sh
+tv.png
