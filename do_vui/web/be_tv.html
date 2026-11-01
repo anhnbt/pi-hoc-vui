@@ -72,10 +72,10 @@ addEventListener("keydown", e => {
   else if (!dang_noi) ngau_nhien();
 });
 
-// Phím từ điện thoại: hình của bé thì hiện ngay; phím của trò Đố vui thì quay về trò đó
+// Phím từ điện thoại: hình của bé thì hiện ngay; nút Camera thì sang camera; phím của trò Đố vui thì quay về trò đó
 new EventSource("/phim").onmessage = e => {
   if (e.data.startsWith("be:")) hien(e.data.slice(3));
-  else location = "/";
+  else location = e.data === "camera" ? "/camera.html" : "/";
 };
 fetch("/dia-chi").then(r => r.text()).then(t => {
   document.getElementById("dia-chi").textContent = t.replace("/tay-cam", "/be");

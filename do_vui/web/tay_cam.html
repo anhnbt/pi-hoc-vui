@@ -22,6 +22,7 @@
   .hang { display: flex; gap: 16px; height: 18vh; }
   .hang button { flex: 1; background: #34466e; font-size: 7vw; }
   .hang .ok { flex: 2; background: var(--chu); color: var(--nen); }
+  .camera { height: 56px; flex: none; font-size: 18px; background: #34466e; }
   #loi { text-align: center; color: var(--phu); min-height: 1.2em; }
 </style>
 </head>
@@ -37,6 +38,7 @@
     <button class="ok" data-phim="chon">OK ▶</button>
   </div>
   <p id="loi"></p>
+  <button class="camera" data-phim="camera">📷 Xem camera trên TV</button>
   <a href="/be" style="text-align: center; color: var(--phu); font-size: 14px">Sang tay cầm Bé tập nói của em →</a>
 <script>
 const loi = document.getElementById("loi");

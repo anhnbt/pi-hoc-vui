@@ -64,6 +64,18 @@ Thêm câu hỏi: sửa danh sách trong `tao_cau_hoi.py` rồi chạy lại. C�
 
 **Hai bé dùng chung một TV:** chạm hình trên tay cầm của em thì TV chuyển sang Bé tập nói. Bấm tay cầm Đố vui thì TV quay về trò của anh. Nếu anh đang chơi dở một lượt, TV không chuyển sang trò của em.
 
+### Xem camera trên TV
+
+Hiện camera Imou (hoặc Dahua) trong nhà lên TV: bấm **📷 Xem camera trên TV** trên tay cầm điện thoại, bấm OK để quay về.
+Cần lưu mật khẩu thiết bị của camera (mặc định là Safety Code in trên tem) vào `~/hoc/camera.env`:
+
+```bash
+printf 'CAM_MAT_KHAU=%s\n' 'MAT_KHAU' > ~/hoc/camera.env && chmod 600 ~/hoc/camera.env
+```
+
+Địa chỉ camera đặt trong `CAM_IP` ở đầu `may_chu.py`. Máy chủ dùng ffmpeg đổi luồng phụ 640×480 sang MJPEG cho trình duyệt,
+và chỉ chạy ffmpeg khi đang có màn hình xem camera.
+
 Thoát trò chơi bằng **Alt+F4**. Muốn tắt tự mở: xoá file `~/.config/autostart/do-vui.desktop`.
 
 ### Chào buổi sáng và chúc ngủ ngon

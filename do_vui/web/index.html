@@ -157,7 +157,9 @@ document.querySelectorAll("#man-dau, #man-cuoi").forEach(m => m.onclick = () => 
 // ... và điều khiển TV hoặc tay cầm điện thoại, do may_chu.py chuyển sang
 // Chạm hình trên tay cầm Bé tập nói thì TV chuyển sang trò của em, trừ khi anh đang chơi dở
 new EventSource("/phim").onmessage = e => {
-  if (!e.data.startsWith("be:")) bam(e.data);
+  // Đang chơi dở một lượt thì không chuyển sang trò của em hay camera
+  if (e.data === "camera") { if (man !== "choi") location = "/camera.html"; }
+  else if (!e.data.startsWith("be:")) bam(e.data);
   else if (man !== "choi") location = "/be_tv.html#" + e.data.slice(3);
 };
 fetch("/dia-chi").then(r => r.text()).then(t => document.getElementById("dia-chi").textContent = t);

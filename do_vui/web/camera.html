@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Camera</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: #000; color: #fff;
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
+  #hinh { width: 100%; height: 100%; object-fit: contain; }
+  .nhan { position: fixed; left: 3vw; top: 3vh; font-size: 4vh; padding: 1vh 2vw;
+    background: rgba(0,0,0,.5); border-radius: 2vh; }
+  .nhan b { font-family: "Noto Color Emoji", sans-serif; font-weight: normal; }
+  .goi-y { position: fixed; right: 3vw; bottom: 3vh; font-size: 3vh; opacity: .7; }
+  #loi { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    font-size: 5vh; text-align: center; padding: 0 10vw; }
+</style>
+</head>
+<body>
+<img id="hinh" alt="">
+<p class="nhan"><b>📷</b> Camera nhà mình · <span id="gio"></span></p>
+<p class="goi-y">Bấm OK để quay về trò chơi</p>
+<p id="loi">Đang kết nối camera…</p>
+<script>
+const hinh = document.getElementById("hinh"), loi = document.getElementById("loi");
+
+function mo() {
+  loi.style.display = "none";
+  hinh.src = "/camera.mjpg?t=" + Date.now();  // thêm t để Chromium không dùng lại kết nối cũ
+}
+// Camera mất mạng hoặc khởi động lại: báo lên màn hình rồi tự thử lại
+hinh.onerror = () => {
+  loi.textContent = "Không xem được camera, đang thử lại…";
+  loi.style.display = "flex";
+  setTimeout(mo, 5000);
+};
+
+function gio() {
+  const d = new Date();
+  document.getElementById("gio").textContent =
+    d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+}
+
+addEventListener("keydown", e => { e.preventDefault(); location = "/"; });
+new EventSource("/phim").onmessage = e => {
+  if (e.data === "camera") return;
+  location = e.data.startsWith("be:") ? "/be_tv.html#" + e.data.slice(3) : "/";
+};
+
+gio(); setInterval(gio, 10000);
+mo();
+</script>
+</body>
+</html>

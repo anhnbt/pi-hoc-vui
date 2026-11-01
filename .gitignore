@@ -11,6 +11,10 @@ do_vui/mo_tro_choi.sh
 *.log
 log.txt
 
+# Mật khẩu camera, không bao giờ đưa lên git
+camera.env
+cam.jpg
+
 # Giọng Piper (tải riêng)
 *.onnx
 *.onnx.json
