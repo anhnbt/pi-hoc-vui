@@ -67,13 +67,24 @@ function ngau_nhien() {
 
 // Bé đập bàn phím: phím nào cũng ra hình mới, nhưng đợi đọc xong mới đổi để bé kịp nghe
 addEventListener("keydown", e => {
+  hoat_dong = Date.now();
   e.preventDefault();
   if (e.key === "Escape") location = "/";
   else if (!dang_noi) ngau_nhien();
 });
 
+// 60 giây bé không chạm hay bấm gì thì về màn chờ, trừ khi đang là giờ Đố vui
+let hoat_dong = Date.now();
+addEventListener("click", () => { hoat_dong = Date.now(); });
+setInterval(() => {
+  if (Date.now() - hoat_dong < 60000) return;
+  fetch("/man-cho/trang-thai").then(r => r.json()).then(t => { if (t.che_do !== "do_vui") location = "/man_cho.html"; }).catch(() => {});
+}, 5000);
+
 // Phím từ điện thoại: hình của bé thì hiện ngay; nút Camera thì sang camera; phím của trò Đố vui thì quay về trò đó
 new EventSource("/phim").onmessage = e => {
+  if (e.data === "man_cho") return;  // màn chờ không kéo trang của em đi
+  hoat_dong = Date.now();
   if (e.data.startsWith("be:")) hien(e.data.slice(3));
   else location = e.data === "camera" ? "/camera.html" : "/";
 };

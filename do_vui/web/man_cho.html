@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Màn hình chờ</title>
+<style>
+  :root { --nen: #000; --chu: #26215C; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--nen); color: var(--chu); cursor: none;
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif; transition: background 1s, color 1s; }
+  #man { height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2vh; text-align: center; padding: 4vh 6vw; }
+  #tren { font-size: 5vh; font-weight: 700; opacity: .8; min-height: 6vh; }
+  /* Chỉ định font emoji màu, nếu không DejaVu sẽ vẽ một số emoji thành nét đen trắng */
+  #emoji { font-size: 45vh; line-height: 1.1; font-family: "Noto Color Emoji", sans-serif; }
+  #chu { font-size: 12vh; font-weight: 700; }
+  #gio-to { font-size: 40vh; font-weight: 700; line-height: 1; }
+  #duoi { font-size: 7vh; font-weight: 700; min-height: 8vh; }
+  .cham { display: inline-block; width: 4vh; height: 4vh; border-radius: 50%; margin: 0 1vh;
+    background: currentColor; opacity: .25; }
+  .cham.nay { opacity: 1; transform: scale(1.5); }
+  .an { display: none !important; }
+</style>
+</head>
+<body>
+<div id="man">
+  <div id="tren"></div>
+  <div id="emoji"></div>
+  <div id="chu"></div>
+  <div id="gio-to" class="an"></div>
+  <div id="duoi"></div>
+</div>
+
+<script>
+// Màu chữ sẫm tương ứng từng màu nền trong lich.py
+const CHU_TREN_NEN = { "#9FA0FF": "#26215C", "#D5E8E6": "#04342C", "#FFF3E3": "#412402", "#FF7171": "#4A1B0C" };
+const tham_so = new URLSearchParams(location.search);
+const gio_thu = tham_so.get("gio");
+let khoa = false;
+
+const $ = id => document.getElementById(id);
+
+function ve(t) {
+  khoa = t.khoa_do_vui;
+  if (t.che_do === "do_vui") { location = "/"; return; }
+  const den = t.che_do === "den", ngu = t.che_do === "ngu_ngon", ranh = t.che_do === "ranh";
+  const nen = den ? "#000000" : ngu ? "#2C2C2A" : t.mau;
+  const root = document.documentElement.style;
+  root.setProperty("--nen", nen);
+  root.setProperty("--chu", den ? "#000000" : ngu ? "#F1EFE8" : CHU_TREN_NEN[t.mau] || "#26215C");
+
+  // Chế độ "den" là màn đen trống; "ranh" thì đồng hồ to thay cho emoji
+  $("emoji").classList.toggle("an", den || ranh);
+  $("chu").classList.toggle("an", den || ranh);
+  $("gio-to").classList.toggle("an", !ranh);
+  $("emoji").textContent = t.emoji; $("chu").textContent = t.chu;
+  $("gio-to").textContent = t.gio;
+
+  let tren = "", duoi = "";
+  if (t.che_do === "viec") {
+    tren = t.gio + (t.con_phut != null ? " · còn " + t.con_phut + " phút" : "");
+    if (t.tong) duoi = Array.from({ length: t.tong }, (_, i) =>
+      `<span class="cham${i + 1 === t.buoc ? " nay" : ""}"></span>`).join("");
+  } else if (t.che_do === "hoc") tren = t.gio;
+  else if (ranh) duoi = t.tiep_theo || "";
+  $("tren").textContent = den ? "" : tren;
+  $("duoi").innerHTML = den ? "" : duoi;
+}
+
+function hoi() {
+  const url = "/man-cho/trang-thai" + (gio_thu ? "?gio=" + encodeURIComponent(gio_thu) : "");
+  fetch(url).then(r => r.json()).then(ve).catch(() => {});
+}
+hoi();
+setInterval(hoi, 5000);
+
+// Đang khoá Đố vui thì chỉ nhận nút Bé tập nói và Camera; không khoá thì phím nào cũng về trò chơi
+addEventListener("keydown", e => { e.preventDefault(); if (!khoa) location = "/"; });
+new EventSource("/phim").onmessage = e => {
+  if (e.data === "man_cho") hoi();
+  else if (e.data.startsWith("be:")) location = "/be_tv.html#" + e.data.slice(3);
+  else if (e.data === "camera") location = "/camera.html";
+  else if (!khoa) location = "/";
+};
+</script>
+</body>
+</html>
