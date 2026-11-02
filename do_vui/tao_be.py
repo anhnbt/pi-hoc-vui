@@ -19,12 +19,12 @@ NHOM = [  # (tên nhóm, emoji đại diện, màu nền, [(mã, emoji, chữ hi
         ("voi", "🐘", "con voi", "Con voi. Voi to lắm! Voi."),
     ]),
     ("Nhà mình", "👨‍👩‍👧", "#ff8fab", [
-        ("bo_bo", "👨", "bố", "Bố đây! Bố yêu con. Bố."),
+        ("bo_bo", "👨", "Ba", "Ba đây! Ba yêu con. Ba."),
         ("me", "👩", "mẹ", "Mẹ đây! Mẹ yêu con. Mẹ."),
         ("ong", "👴", "ông", "Ông đây! Ông bế con nào. Ông."),
         ("ba", "👵", "bà", "Bà đây! Bà thơm con nào. Bà."),
-        ("anh", "👦", "anh", "Anh trai đây! Anh chơi với em. Anh."),
-        ("em_be", "👶", "em bé", "Em bé! Em bé là con đấy. Bé."),
+        ("anh", "👦", "Anh Khoai Tây", "Anh Khoai Tây đây! Anh chơi với em. Anh."),
+        ("em_be", "👶", "Dâu Tây", "Dâu Tây đây! Dâu Tây là con đấy. Dâu Tây."),
     ]),
     ("Ăn uống", "🍌", "#8fd694", [
         ("chuoi", "🍌", "quả chuối", "Quả chuối. Chuối ngọt lắm! Chuối."),
@@ -51,6 +51,8 @@ NHOM = [  # (tên nhóm, emoji đại diện, màu nền, [(mã, emoji, chữ hi
         ("chan", "🦶", "chân", "Chân đâu? Chân đây! Chân."),
     ]),
 ]
+# Ảnh riêng thay cho emoji: đặt web/anh/<mã>.jpg (ví dụ ảnh của bé cho em_be). Thư mục này không đưa lên git.
+ANH = os.path.join(WEB, "anh")
 CHAO = "Chào bé! Mình cùng tập nói nhé!"
 CANH_BAO_KHOC = "Bố mẹ ơi! Em bé đang khóc đấy!"  # may_chu.py đọc khi micro camera nghe tiếng khóc
 
@@ -70,7 +72,8 @@ def main():
     du_lieu = {
         "chao": "am_thanh/" + ten_file(CHAO),
         "nhom": [{"ten": ten, "emoji": emoji, "mau": mau,
-                  "muc": [{"ma": ma, "emoji": e, "chu": chu, "am": "am_thanh/" + ten_file(doc)}
+                  "muc": [{"ma": ma, "emoji": e, "chu": chu, "am": "am_thanh/" + ten_file(doc),
+                           **({"anh": f"anh/{ma}.jpg"} if os.path.exists(os.path.join(ANH, f"{ma}.jpg")) else {})}
                           for ma, e, chu, doc in muc]}
                  for ten, emoji, mau, muc in NHOM],
     }

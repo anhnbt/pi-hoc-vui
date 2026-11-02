@@ -19,6 +19,7 @@
   .luoi button { border: none; border-radius: 24px; font-size: 18vw; line-height: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     transition: transform .08s; }
+  .luoi button img { width: 18vw; height: 18vw; object-fit: cover; border-radius: 50%; border: 3px solid #fff; }
   .luoi button small { font-size: 18px; font-weight: 600; color: var(--chu); }
   .luoi button:active { transform: scale(.92); }
   a { text-align: center; color: var(--chu); opacity: .6; font-size: 14px; }
@@ -40,7 +41,7 @@ function ve() {
     `<button class="${i === dang_chon ? "dang-chon" : ""}" data-i="${i}" aria-label="${x.ten}">${x.emoji}</button>`).join("");
   document.getElementById("ten-nhom").textContent = n.ten;
   document.getElementById("luoi").innerHTML = n.muc.map(m =>
-    `<button style="background:${n.mau}" data-ma="${m.ma}">${m.emoji}<small>${m.chu}</small></button>`).join("");
+    `<button style="background:${n.mau}" data-ma="${m.ma}">${m.anh ? `<img src="${m.anh}" alt="">` : m.emoji}<small>${m.chu}</small></button>`).join("");
 }
 
 // Chạm là ăn ngay; bé 2 tuổi hay chạm rồi giữ tay, không nhả ra như click. iOS 12 (iPhone 6) chưa có

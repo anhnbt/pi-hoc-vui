@@ -15,6 +15,7 @@
   .goi-y { font-size: 4vh; opacity: .7; }
   /* Chỉ định font emoji màu, nếu không DejaVu sẽ vẽ một số con vật (🐱 🐶...) thành nét đen trắng */
   #emoji { font-size: 50vh; line-height: 1.1; font-family: "Noto Color Emoji", sans-serif; }
+  #emoji img { height: 50vh; width: 50vh; object-fit: cover; border-radius: 50%; border: 1.5vh solid #fff; }
   #chu { font-size: 14vh; font-weight: 700; }
   .nay { animation: nay .7s cubic-bezier(.3, 1.6, .5, 1); }
   @keyframes nay { from { transform: scale(.2) rotate(-12deg); opacity: 0; } }
@@ -51,6 +52,7 @@ function hien(ma) {
   for (const [id, noi_dung] of [["emoji", m.emoji], ["chu", m.chu]]) {
     const o = document.getElementById(id);
     o.textContent = noi_dung;
+    if (id === "emoji" && m.anh) o.innerHTML = `<img src="${m.anh}" alt="">`;  // ảnh thật của bé thay cho emoji
     o.classList.remove("nay");
     void o.offsetWidth;  // để hiệu ứng nảy chạy lại cả khi bấm cùng một hình
     o.classList.add("nay");
