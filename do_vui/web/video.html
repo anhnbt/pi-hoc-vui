@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video lên TV</title>
+<style>
+  :root { --nen: #1b2a4a; --the: #34466e; --chu: #ffffff; --phu: #b9c6e4; --nhan: #f5b400; --do: #e5484d; }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--nen); color: var(--chu); font-family: system-ui, "Noto Sans", sans-serif; }
+  body { display: flex; flex-direction: column; gap: 14px; padding: 16px; max-width: 560px; margin: 0 auto; }
+  h1 { font-size: 22px; }
+  button { font: inherit; border: none; border-radius: 14px; color: var(--chu); background: var(--the); }
+  button:active { filter: brightness(1.2); }
+  button:disabled { opacity: .5; }
+  #chon { height: 56px; background: var(--nhan); color: #2b2100; font-size: 18px; font-weight: 700; }
+  #dung { height: 52px; background: var(--do); font-size: 17px; font-weight: 700; display: none; }
+  #trang-thai { min-height: 1.3em; text-align: center; color: var(--phu); }
+  .thanh { height: 8px; border-radius: 4px; background: var(--the); overflow: hidden; display: none; }
+  .thanh div { height: 100%; width: 0; background: var(--nhan); transition: width .2s; }
+  .vid { display: flex; gap: 12px; align-items: center; background: var(--the); border-radius: 14px; padding: 10px;
+    border: 2px solid transparent; }
+  .vid.dang-phat { border-color: var(--nhan); }
+  .vid img { width: 96px; height: 72px; object-fit: cover; border-radius: 10px; background: #000; flex: none; }
+  .vid .ten { flex: 1; min-width: 0; }
+  .vid .ten b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+  .vid .ten small { color: var(--phu); font-size: 13px; }
+  .vid .phat { width: 56px; height: 56px; font-size: 22px; background: var(--nhan); color: #2b2100; flex: none; }
+  .vid .xoa { width: 44px; height: 56px; font-size: 18px; flex: none; }
+  .trong { text-align: center; color: var(--phu); padding: 24px 0; }
+  .chan { text-align: center; color: var(--phu); font-size: 13px; }
+  a { text-align: center; color: var(--phu); font-size: 14px; }
+</style>
+</head>
+<body>
+  <h1>🎬 Video lên TV</h1>
+  <button id="chon">📤 Chọn video gửi lên Pi</button>
+  <input id="tep" type="file" accept="video/*" multiple hidden>
+  <div class="thanh" id="thanh"><div></div></div>
+  <p id="trang-thai"></p>
+  <button id="dung">⏹ Dừng video trên TV</button>
+  <div id="ds"></div>
+  <p class="chan" id="con-trong"></p>
+  <a href="/tay-cam">← Về tay cầm</a>
+<script>
+// Viết theo kiểu Safari cũ đọc được: không dùng ?. hay ??
+var trang_thai = document.getElementById("trang-thai"), thanh = document.getElementById("thanh");
+var dang_gui = false;
+
+function phut_giay(s) {
+  if (s == null) return "";
+  return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+}
+
+function ve(du_lieu) {
+  var ds = document.getElementById("ds");
+  ds.innerHTML = "";
+  if (!du_lieu.video.length) {
+    ds.innerHTML = '<p class="trong">Chưa có video nào. Bấm nút vàng ở trên để gửi.</p>';
+  }
+  du_lieu.video.forEach(function (v) {
+    var o = document.createElement("div");
+    o.className = "vid" + (v.ten === du_lieu.dang_phat ? " dang-phat" : "");
+    var anh = document.createElement("img");
+    anh.src = "/video/anh?ten=" + encodeURIComponent(v.ten);
+    anh.alt = "";
+    var ten = document.createElement("div");
+    ten.className = "ten";
+    var b = document.createElement("b"), nho = document.createElement("small");
+    b.textContent = v.ten;
+    nho.textContent = v.ngay + " · " + phut_giay(v.giay) + " · " + v.mb + " MB" +
+      (v.ten === du_lieu.dang_phat ? " · đang phát" : "");
+    ten.appendChild(b); ten.appendChild(nho);
+    var phat = document.createElement("button");
+    phat.className = "phat"; phat.textContent = "▶"; phat.setAttribute("aria-label", "Phát " + v.ten);
+    phat.onclick = function () { lenh("/video/phat?ten=" + encodeURIComponent(v.ten), "Đang phát trên TV: " + v.ten); };
+    var xoa = document.createElement("button");
+    xoa.className = "xoa"; xoa.textContent = "🗑"; xoa.setAttribute("aria-label", "Xoá " + v.ten);
+    xoa.onclick = function () {
+      if (confirm("Xoá hẳn video " + v.ten + " khỏi Pi?")) lenh("/video/xoa?ten=" + encodeURIComponent(v.ten), "Đã xoá " + v.ten);
+    };
+    o.appendChild(anh); o.appendChild(ten); o.appendChild(phat); o.appendChild(xoa);
+    ds.appendChild(o);
+  });
+  document.getElementById("dung").style.display = du_lieu.dang_phat ? "block" : "none";
+  document.getElementById("con-trong").textContent = "Thẻ nhớ Pi còn trống " + (du_lieu.con_trong_mb / 1024).toFixed(1) + " GB";
+}
+
+function tai() {
+  fetch("/video/danh-sach").then(function (r) { return r.json(); }).then(ve)
+    .catch(function () { trang_thai.textContent = "❌ Không kết nối được với Pi"; });
+}
+
+function lenh(url, bao) {
+  fetch(url, { method: "POST" })
+    .then(function (r) { return r.ok ? r.json().then(ve).then(function () { trang_thai.textContent = bao; })
+                                     : r.text().then(function (t) { trang_thai.textContent = "❌ " + t; }); })
+    .catch(function () { trang_thai.textContent = "❌ Không kết nối được với Pi"; });
+}
+
+// Gửi lần lượt từng video, có thanh tiến độ (XMLHttpRequest vì fetch chưa báo được tiến độ tải lên)
+function gui(ds, i) {
+  if (i >= ds.length) {
+    dang_gui = false; thanh.style.display = "none";
+    document.getElementById("chon").disabled = false;
+    return tai();
+  }
+  var f = ds[i], x = new XMLHttpRequest();
+  var dem = ds.length > 1 ? " (" + (i + 1) + "/" + ds.length + ")" : "";
+  x.open("POST", "/video/tai-len?ten=" + encodeURIComponent(f.name));
+  x.upload.onprogress = function (e) {
+    if (!e.lengthComputable) return;
+    var pt = Math.round(e.loaded * 100 / e.total);
+    thanh.firstChild.style.width = pt + "%";
+    trang_thai.textContent = "Đang gửi " + f.name + dem + ": " + pt + "%";
+  };
+  x.onload = function () {
+    trang_thai.textContent = x.status === 200 ? "✅ Đã gửi " + f.name : "❌ " + f.name + ": " + x.responseText;
+    gui(ds, i + 1);
+  };
+  x.onerror = function () { trang_thai.textContent = "❌ Mất kết nối khi gửi " + f.name; gui(ds, i + 1); };
+  thanh.firstChild.style.width = "0";
+  x.send(f);
+}
+
+document.getElementById("chon").onclick = function () { if (!dang_gui) document.getElementById("tep").click(); };
+document.getElementById("tep").onchange = function () {
+  var ds = Array.prototype.slice.call(this.files);
+  this.value = "";
+  if (!ds.length) return;
+  dang_gui = true; thanh.style.display = "block";
+  document.getElementById("chon").disabled = true;
+  gui(ds, 0);
+};
+document.getElementById("dung").onclick = function () { lenh("/video/dung", "Đã dừng video"); };
+
+tai();
+setInterval(function () { if (!dang_gui) tai(); }, 4000);  // để biết video phát xong chưa
+</script>
+</body>
+</html>

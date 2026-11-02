@@ -108,6 +108,12 @@ hoặc tự gõ (tối đa 200 ký tự). Câu có sẵn dùng giọng VieNeu đ
 Câu gõ tay được Piper đọc ngay, mất khoảng 1 giây. Piper chạy thường trực trong `~/hoc/venv`, cùng giọng `vi_VN-vais1000-medium` ở `~/hoc`.
 Mỗi lời nhắn được ghi vào `log.txt`.
 
+**Video lên TV:** mở `http://<ip-của-pi>:8080/video`, bấm **📤 Chọn video gửi lên Pi** để gửi video từ thư viện điện thoại
+(chọn được nhiều video, tối đa 500 MB mỗi video, Pi từ chối khi thẻ nhớ còn dưới 1 GB trống).
+Bấm ▶ để phát toàn màn hình trên TV bằng VLC (trình duyệt trên Pi không phát được video HEVC của iPhone),
+⏹ để dừng, 🗑 để xoá hẳn. Video nằm trong `~/hoc/video`, ngoài thư mục web và không đưa lên git
+([do_vui/video.py](do_vui/video.py)). Cần VLC: `sudo apt install vlc`.
+
 ### Dùng từ xa (4G, công ty)
 
 Máy chủ không có mật khẩu, nên **đừng mở cổng 8080 trên router**: ai dò được IP nhà bạn cũng sẽ xem được camera và nói vào loa.

@@ -7,6 +7,7 @@ import serial  # pyserial, có sẵn trên Raspberry Pi OS
 
 import lich
 import loa_camera
+import video
 from tao_be import CANH_BAO_KHOC
 from tao_cau_hoi import AM_THANH, ten_file
 
@@ -234,8 +235,33 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
         ngay = lich.ngay_ap_dung_nghi(datetime.datetime.now())
         self.tra_json({"ngay": ngay.isoformat(), "nghi": lich.doc_nghi_hoc(NGHI_HOC, ngay)})
 
+    def xu_ly_video(self, url):
+        """Trang /video: gửi video từ điện thoại lên Pi, phát trên TV, dừng, xoá."""
+        ten = parse_qs(url.query).get("ten", [""])[0]
+        if url.path == "/video/tai-len":
+            if not video.ten_an_toan(ten):
+                return self.tra_loi_chu(400, "Chỉ nhận video .mov, .mp4, .m4v")
+            do_dai = int(self.headers.get("Content-Length", 0))
+            ly_do = video.ly_do_tu_choi(do_dai, video.con_trong())
+            if ly_do:
+                return self.tra_loi_chu(400, ly_do)
+            try:
+                return self.tra_json({"ten": video.luu(self.rfile, do_dai, ten)})
+            except Exception as loi:
+                return self.tra_loi_chu(500, f"Không lưu được: {loi}")
+        if url.path == "/video/phat":
+            return self.tra_json(video.danh_sach()) if video.phat(ten) else self.tra_loi_chu(404, "Không thấy video")
+        if url.path == "/video/dung":
+            video.dung()
+            return self.tra_json(video.danh_sach())
+        if url.path == "/video/xoa":
+            return self.tra_json(video.danh_sach()) if video.xoa(ten) else self.tra_loi_chu(404, "Không thấy video")
+        return self.tra_loi_chu(404)
+
     def do_POST(self):
         url = urlparse(self.path)
+        if url.path.startswith("/video/"):
+            return self.xu_ly_video(url)
         if url.path == "/nghi-hoc":
             nghi = parse_qs(url.query).get("nghi", [""])[0]
             if nghi not in ("0", "1"):
@@ -277,6 +303,8 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
             self.path = "/be_tay_cam.html"
         if self.path == "/loi-nhan":
             self.path = "/loi_nhan.html"
+        if self.path == "/video":
+            self.path = "/video.html"
         if self.path == "/dia-chi":
             return self.tra_loi_chu(200, f"http://{dia_chi_ip()}:8080/tay-cam")
         duong = urlparse(self.path).path
@@ -291,6 +319,10 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
             return self.tra_json(trang_thai_bay_gio(bay_gio))
         if duong == "/camera.mjpg":
             return self.phat_camera()
+        if duong == "/video/danh-sach":
+            return self.tra_json(video.danh_sach())
+        if duong == "/video/anh":
+            return self.tra_anh_nho(parse_qs(urlparse(self.path).query).get("ten", [""])[0])
         if self.path != "/phim":
             self.tep_tinh = True
             return super().do_GET()
@@ -311,6 +343,19 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
             pass
         finally:
             nguoi_nghe.remove(q)
+
+    def tra_anh_nho(self, ten):
+        p = video.duong_dan(ten)
+        anh = p and video.tao_anh_nho(os.path.basename(p))
+        if not anh:
+            return self.tra_loi_chu(404)
+        with open(anh, "rb") as f:
+            du_lieu = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", "image/jpeg")
+        self.send_header("Content-Length", str(len(du_lieu)))
+        self.end_headers()
+        self.wfile.write(du_lieu)
 
     def phat_camera(self):
         """Chromium không phát được RTSP, nên ffmpeg đổi sang MJPEG để thẻ <img> hiện thẳng.
