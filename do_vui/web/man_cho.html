@@ -8,13 +8,20 @@
   * { box-sizing: border-box; margin: 0; }
   html, body { height: 100%; overflow: hidden; background: var(--nen); color: var(--chu); cursor: none;
     font-family: "Noto Sans", "DejaVu Sans", sans-serif; transition: background 1s, color 1s; }
-  #man { height: 100%; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 2vh; text-align: center; padding: 4vh 6vw; }
+  body { display: flex; }
+  /* TV rộng: nửa trái là đồng hồ kim để con tập xem giờ, nửa phải là việc đang làm */
+  #trai { width: 50%; height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2vh; }
+  #dong-ho { height: 78vh; }
+  #doc-gio { font-size: 7vh; font-weight: 700; }
+  .mau-gio { color: #C0392B; } .mau-phut { color: #5B5CD6; }
+  #man { width: 50%; height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2vh; text-align: center; padding: 4vh 3vw; }
   #tren { font-size: 5vh; font-weight: 700; opacity: .8; min-height: 6vh; }
   /* Chỉ định font emoji màu, nếu không DejaVu sẽ vẽ một số emoji thành nét đen trắng */
-  #emoji { font-size: 45vh; line-height: 1.1; font-family: "Noto Color Emoji", sans-serif; }
-  #chu { font-size: 12vh; font-weight: 700; }
-  #gio-to { font-size: 40vh; font-weight: 700; line-height: 1; }
+  #emoji { font-size: 38vh; line-height: 1.1; font-family: "Noto Color Emoji", sans-serif; }
+  #chu { font-size: 10vh; font-weight: 700; }
+  #gio-to { font-size: 26vh; font-weight: 700; line-height: 1; }
   #duoi { font-size: 7vh; font-weight: 700; min-height: 8vh; }
   .cham { display: inline-block; width: 4vh; height: 4vh; border-radius: 50%; margin: 0 1vh;
     background: currentColor; opacity: .25; }
@@ -23,6 +30,18 @@
 </style>
 </head>
 <body>
+<div id="trai">
+  <svg id="dong-ho" viewBox="-160 -160 320 320">
+    <circle r="152" fill="#FFF3E3" stroke="#2F4F4D" stroke-width="6"/>
+    <path id="quat" fill="#9FA0FF" opacity=".45"/>
+    <g id="vach"></g>
+    <line id="kim-gio" y1="12" y2="-72" stroke="#FF7171" stroke-width="13" stroke-linecap="round"/>
+    <line id="kim-phut" y1="16" y2="-118" stroke="#5B5CD6" stroke-width="7" stroke-linecap="round"/>
+    <line id="kim-giay" y1="24" y2="-132" stroke="#444441" stroke-width="2.5" stroke-linecap="round"/>
+    <circle r="8" fill="#2F4F4D"/>
+  </svg>
+  <div id="doc-gio"></div>
+</div>
 <div id="man">
   <div id="tren"></div>
   <div id="emoji"></div>
@@ -36,7 +55,7 @@
 const CHU_TREN_NEN = { "#9FA0FF": "#26215C", "#D5E8E6": "#04342C", "#FFF3E3": "#412402", "#FF7171": "#4A1B0C" };
 const tham_so = new URLSearchParams(location.search);
 const gio_thu = tham_so.get("gio");
-let khoa = false;
+let khoa = false, con_phut = null;
 
 const $ = id => document.getElementById(id);
 
@@ -63,9 +82,52 @@ function ve(t) {
       `<span class="cham${i + 1 === t.buoc ? " nay" : ""}"></span>`).join("");
   } else if (t.che_do === "hoc") tren = t.gio;
   $("tren").textContent = den ? "" : tren;
+  $("trai").classList.toggle("an", den);
+  con_phut = t.che_do === "viec" ? t.con_phut : null;
+  ve_dong_ho();
   if (ranh) $("duoi").textContent = t.tiep_theo ? "Tiếp theo: " + t.tiep_theo : "";
   else $("duoi").innerHTML = den ? "" : duoi;
 }
+
+// Mặt đồng hồ: vạch từng phút, số giờ đỏ to (giống kim giờ), số phút tím nhỏ sát mép (giống kim phút)
+const SVG = "http://www.w3.org/2000/svg";
+const diem = (do_, r) => [r * Math.sin(do_ * Math.PI / 180), -r * Math.cos(do_ * Math.PI / 180)];
+function them(the, thuoc_tinh, chu) {
+  const o = document.createElementNS(SVG, the);
+  for (const k in thuoc_tinh) o.setAttribute(k, thuoc_tinh[k]);
+  if (chu != null) o.textContent = chu;
+  $("vach").appendChild(o);
+}
+for (let p = 0; p < 60; p++) {
+  const dai = p % 5 === 0;
+  const [x1, y1] = diem(p * 6, 150), [x2, y2] = diem(p * 6, dai ? 138 : 144);
+  them("line", { x1, y1, x2, y2, stroke: "#2F4F4D", "stroke-width": dai ? 3 : 1.2 });
+  if (dai) {
+    const [xp, yp] = diem(p * 6, 127), [xg, yg] = diem(p * 6, 102);
+    them("text", { x: xp, y: yp, fill: "#5B5CD6", "font-size": 12, "text-anchor": "middle", "dominant-baseline": "central" }, p || 60);
+    them("text", { x: xg, y: yg, fill: "#C0392B", "font-size": 30, "font-weight": 700, "text-anchor": "middle", "dominant-baseline": "central" }, p / 5 || 12);
+  }
+}
+
+// Xem thử bằng ?gio=... thì đồng hồ đứng ở giờ đó; bình thường chạy theo giờ của Pi
+function bay_gio() { return gio_thu ? new Date(gio_thu) : new Date(); }
+
+function ve_dong_ho() {
+  const d = bay_gio(), h = d.getHours(), m = d.getMinutes(), s = d.getSeconds();
+  if (isNaN(h)) return;
+  const do_phut = m * 6 + s * 0.1;
+  $("kim-gio").setAttribute("transform", `rotate(${(h % 12) * 30 + m * 0.5})`);
+  $("kim-phut").setAttribute("transform", `rotate(${do_phut})`);
+  $("kim-giay").setAttribute("transform", `rotate(${s * 6})`);  // nhảy từng giây, tích tắc
+  $("doc-gio").innerHTML = `<span class="mau-gio">${h} giờ</span> <span class="mau-phut">${m} phút</span>`;
+  // Quạt tím mờ: từ kim phút tới lúc hết việc, để con thấy "còn X phút" ngay trên mặt đồng hồ
+  const con = Math.min(con_phut || 0, 60);
+  if (con <= 0) { $("quat").setAttribute("d", ""); return; }
+  const [x1, y1] = diem(do_phut, 150), [x2, y2] = diem(do_phut + con * 6 - (con === 60 ? 0.01 : 0), 150);
+  $("quat").setAttribute("d", `M0 0 L${x1} ${y1} A150 150 0 ${con > 30 ? 1 : 0} 1 ${x2} ${y2} Z`);
+}
+ve_dong_ho();
+setInterval(ve_dong_ho, 1000);
 
 function hoi() {
   const url = "/man-cho/trang-thai" + (gio_thu ? "?gio=" + encodeURIComponent(gio_thu) : "");

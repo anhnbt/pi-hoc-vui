@@ -209,6 +209,14 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k):
         super().__init__(*a, directory=WEB, **k)
 
+    tep_tinh = False
+
+    def end_headers(self):
+        # Trang web trên TV phải lấy bản mới sau mỗi lần cập nhật, không dùng bản Chromium lưu tạm
+        if self.tep_tinh:
+            self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
+
     def tra_loi_chu(self, ma, noi_dung=""):
         self.send_response(ma)
         self.send_header("Content-Type", "text/plain; charset=utf-8")
@@ -284,6 +292,7 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
         if duong == "/camera.mjpg":
             return self.phat_camera()
         if self.path != "/phim":
+            self.tep_tinh = True
             return super().do_GET()
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
