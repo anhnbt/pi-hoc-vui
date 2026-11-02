@@ -38,9 +38,9 @@
 <script>
 const loa = new Audio();
 const tat_ca = window.BE.nhom.flatMap(n => n.muc.map(m => ({ ...m, mau: n.mau })));
-let dang_noi = false, truoc = null;
+let dang_noi = false, truoc = null, cho_qua = null;
 
-loa.onended = loa.onerror = () => { dang_noi = false; };
+loa.onended = loa.onerror = () => { dang_noi = false; clearTimeout(cho_qua); };
 
 function hien(ma) {
   const m = tat_ca.find(x => x.ma === ma);
@@ -58,6 +58,8 @@ function hien(ma) {
     o.classList.add("nay");
   }
   dang_noi = true;
+  clearTimeout(cho_qua);
+  cho_qua = setTimeout(() => { dang_noi = false; }, 10000);  // phòng khi loa không báo đọc xong
   loa.src = m.am;
   loa.play().catch(() => { dang_noi = false; });
 }
@@ -87,7 +89,8 @@ setInterval(() => {
 new EventSource("/phim").onmessage = e => {
   if (e.data === "man_cho") return;  // màn chờ không kéo trang của em đi
   hoat_dong = Date.now();
-  if (e.data.startsWith("be:")) hien(e.data.slice(3));
+  // Bé chạm liên tục trên điện thoại: đợi đọc xong câu này mới nhận hình mới, không phát đè
+  if (e.data.startsWith("be:")) { if (!dang_noi) hien(e.data.slice(3)); }
   else location = e.data === "camera" ? "/camera.html" : "/";
 };
 fetch("/dia-chi").then(r => r.text()).then(t => {
