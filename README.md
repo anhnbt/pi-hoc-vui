@@ -140,6 +140,23 @@ Thêm vào `crontab -e`:
 30 18 * * * XDG_RUNTIME_DIR=/run/user/1000 $HOME/hoc/vieneu-venv/bin/python $HOME/hoc/do_vui/nhac_nghi.py >> $HOME/hoc/log.txt 2>&1
 ```
 
+### Nhắc uống nước khi ngồi lâu
+
+Từ 14:00 đến 21:30, [do_vui/nhac_uong_nuoc.py](do_vui/nhac_uong_nuoc.py) cứ mỗi phút đếm người trong phòng một lần (cùng bộ đếm ở trên).
+Có người liền 30 phút thì loa camera nhắc "Tùng Lâm ơi, ngồi lâu rồi, uống một ngụm nước đi nào!", rồi đếm lại từ đầu.
+Camera không phân biệt con với bố nên ai ngồi cũng tính. Phòng trống từ 5 phút thì coi như đã đứng dậy.
+Không nhắc trong 19:10–19:25 (giờ nhắc nghỉ khi học với cô) và 5 phút sau câu nhắc tắm, dọn đồ chơi.
+
+```bash
+cd ~/hoc/do_vui && ../vieneu-venv/bin/python nhac_uong_nuoc.py --thu   # thử 10 phút: 2 phút là nhắc, không phát tiếng
+```
+
+Thêm vào `crontab -e`:
+
+```
+0 14 * * * XDG_RUNTIME_DIR=/run/user/1000 $HOME/hoc/vieneu-venv/bin/python $HOME/hoc/do_vui/nhac_uong_nuoc.py >> $HOME/hoc/log.txt 2>&1
+```
+
 Thoát trò chơi bằng **Alt+F4**. Muốn tắt tự mở: xoá file `~/.config/autostart/do-vui.desktop`.
 
 ### Chào buổi sáng và chúc ngủ ngon
