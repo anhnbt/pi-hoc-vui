@@ -4,10 +4,13 @@
 <meta charset="utf-8">
 <title>Màn hình chờ</title>
 <style>
-  :root { --nen: #000; --chu: #26215C; }
+  :root { --nen: #D5E8E6; --chu: #04342C; }
   * { box-sizing: border-box; margin: 0; }
   html, body { height: 100%; overflow: hidden; background: var(--nen); color: var(--chu); cursor: none;
-    font-family: "Noto Sans", "DejaVu Sans", sans-serif; transition: background 1s, color 1s; }
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
+  /* Chỉ đổi màu từ từ khi chuyển việc; lúc mới mở trang thì hiện màu ngay, không chớp */
+  html.man-den #trai, html.man-den #man { visibility: hidden; }  /* giờ ngủ: màn đen trống, kể cả lúc mới tải */
+  html.da-ve, html.da-ve body { transition: background 1s, color 1s; }
   body { display: flex; }
   /* TV rộng: nửa trái là đồng hồ kim để con tập xem giờ, nửa phải là việc đang làm */
   #trai { width: 50%; height: 100%; display: flex; flex-direction: column; align-items: center;
@@ -28,6 +31,17 @@
   .cham.nay { opacity: 1; transform: scale(1.5); }
   .an { display: none !important; }
 </style>
+<script>
+// Tô ngay màu lần trước (lưu trong trình duyệt) trước khi vẽ trang, để tải lại không chớp màn đen hay màn sáng
+try {
+  const cu = JSON.parse(localStorage.getItem("mau_man_cho"));
+  if (cu) {
+    document.documentElement.style.setProperty("--nen", cu.nen);
+    document.documentElement.style.setProperty("--chu", cu.chu);
+    if (cu.den) document.documentElement.classList.add("man-den");
+  }
+} catch (e) {}
+</script>
 </head>
 <body>
 <div id="trai">
@@ -66,7 +80,11 @@ function ve(t) {
   const nen = den ? "#000000" : ngu ? "#2C2C2A" : t.mau;
   const root = document.documentElement.style;
   root.setProperty("--nen", nen);
-  root.setProperty("--chu", den ? "#000000" : ngu ? "#F1EFE8" : CHU_TREN_NEN[t.mau] || "#26215C");
+  const chu = den ? "#000000" : ngu ? "#F1EFE8" : CHU_TREN_NEN[t.mau] || "#26215C";
+  root.setProperty("--chu", chu);
+  document.documentElement.classList.toggle("man-den", den);
+  try { localStorage.setItem("mau_man_cho", JSON.stringify({ nen, chu, den })); } catch (e) {}
+  requestAnimationFrame(() => document.documentElement.classList.add("da-ve"));
 
   // Chế độ "den" là màn đen trống; "ranh" thì đồng hồ to thay cho emoji
   $("emoji").classList.toggle("an", den || ranh);
