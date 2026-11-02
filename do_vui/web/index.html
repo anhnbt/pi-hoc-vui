@@ -186,7 +186,8 @@ new EventSource("/phim").onmessage = e => {
   }
   if (!e.data.startsWith("be:") && e.data !== "camera") hoat_dong = Date.now();
   // Đang chơi dở một lượt thì không chuyển sang trò của em hay camera
-  if (e.data === "camera") { if (man !== "choi") location = "/camera.html"; }
+  if (e.data === "dong_ho") location = "/man_cho.html?giu=1";  // bố mẹ bấm từ điện thoại: sang đồng hồ cả khi đang chơi
+  else if (e.data === "camera") { if (man !== "choi") location = "/camera.html"; }
   else if (!e.data.startsWith("be:")) bam(e.data);
   else if (man !== "choi") location = "/be_tv.html#" + e.data.slice(3);
 };

@@ -92,6 +92,7 @@ new EventSource("/phim").onmessage = e => {
   // Bé chạm liên tục trên điện thoại: đợi đọc xong câu này mới nhận hình mới, không phát đè
   if (e.data.startsWith("be:ai_")) location = "/ai_day.html";
   else if (e.data.startsWith("be:")) { if (!dang_noi) hien(e.data.slice(3)); }
+  else if (e.data === "dong_ho") location = "/man_cho.html?giu=1";
   else location = e.data === "camera" ? "/camera.html" : "/";
 };
 fetch("/dia-chi").then(r => r.text()).then(t => {

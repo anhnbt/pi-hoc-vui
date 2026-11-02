@@ -19,7 +19,7 @@ PHIM_CEC = {  # mã nút điều khiển theo chuẩn CEC
     "0x71": "xanh_duong", "0x72": "do", "0x73": "xanh_la", "0x74": "vang",
 }
 
-PHIM_HOP_LE = set(PHIM_CEC.values()) | {"camera", "man_cho"}
+PHIM_HOP_LE = set(PHIM_CEC.values()) | {"camera", "man_cho", "dong_ho"}
 
 # Camera Imou trong nhà: dùng luồng phụ 640x480 H.264 cho nhẹ. Mật khẩu nằm trong ~/hoc/camera.env
 # (dòng CAM_MAT_KHAU=...), không có file đó thì tắt tính năng camera.

@@ -69,14 +69,19 @@ try {
 const CHU_TREN_NEN = { "#9FA0FF": "#26215C", "#D5E8E6": "#04342C", "#FFF3E3": "#412402", "#FF7171": "#4A1B0C" };
 const tham_so = new URLSearchParams(location.search);
 const gio_thu = tham_so.get("gio");
+// Bố mẹ bấm "Xem đồng hồ" (?giu): giữ đồng hồ 10 phút, kể cả giờ Đố vui hay giờ ngủ; sau đó như bình thường
+const giu_den = tham_so.has("giu") ? Date.now() + 600000 : 0;
 let khoa = false, con_phut = null;
 
 const $ = id => document.getElementById(id);
 
 function ve(t) {
   khoa = t.khoa_do_vui;
-  if (t.che_do === "do_vui") { location = "/"; return; }
-  const den = t.che_do === "den", ngu = t.che_do === "ngu_ngon", ranh = t.che_do === "ranh";
+  const giu = Date.now() < giu_den;
+  if (t.che_do === "do_vui" && !giu) { location = "/"; return; }  // bố mẹ bấm "Xem đồng hồ" thì ở lại
+  // Giờ ngủ là màn đen trống; nhưng bố mẹ bấm "Xem đồng hồ" (?giu) thì hiện đồng hồ trên nền tối
+  const den = t.che_do === "den" && !giu, ngu = t.che_do === "ngu_ngon" || (t.che_do === "den" && giu);
+  const ranh = t.che_do === "ranh";
   const nen = den ? "#000000" : ngu ? "#2C2C2A" : t.mau;
   const root = document.documentElement.style;
   root.setProperty("--nen", nen);
@@ -157,7 +162,7 @@ setInterval(hoi, 5000);
 // Đang khoá Đố vui thì chỉ nhận nút Bé tập nói và Camera; không khoá thì phím nào cũng về trò chơi
 addEventListener("keydown", e => { e.preventDefault(); if (!khoa) location = "/"; });
 new EventSource("/phim").onmessage = e => {
-  if (e.data === "man_cho") hoi();
+  if (e.data === "man_cho" || e.data === "dong_ho") hoi();
   else if (e.data.startsWith("be:")) location = "/be_tv.html#" + e.data.slice(3);
   else if (e.data === "camera") location = "/camera.html";
   else if (!khoa) location = "/";
