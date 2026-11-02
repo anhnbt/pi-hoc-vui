@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Ai đây?</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; background: #1b1b1b; color: #3a2a10; cursor: none;
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
+  /* Ảnh cả nhà cao bằng màn hình, nằm giữa; khi đúng thì phóng to quanh mặt người đó */
+  #khung { position: relative; height: 100vh; aspect-ratio: 1995 / 1330; margin: 0 auto; overflow: hidden; }
+  #cuon { position: absolute; inset: 0; transition: transform .9s ease; }
+  #cuon img { width: 100%; height: 100%; display: block; }
+  .vong { position: absolute; width: 24vh; height: 24vh; transform: translate(-50%, -50%); border-radius: 50%;
+    border: 1.4vh solid #FFD54A; box-shadow: 0 0 4vh #FFD54A; display: none; }
+  .vong.sai { border-color: #fff; box-shadow: 0 0 3vh #fff; }
+  .vong.hien { display: block; }
+  #cau { position: fixed; left: 50%; bottom: 5vh; transform: translateX(-50%); background: #fff3c4;
+    padding: 2vh 5vh; border-radius: 6vh; font-size: 9vh; font-weight: 700; white-space: nowrap; }
+  #thieu { color: #fff; font-size: 6vh; text-align: center; padding-top: 40vh; }
+</style>
+</head>
+<body>
+<div id="khung">
+  <div id="cuon"><img src="anh/ca_nha.jpg" alt=""><div class="vong" id="vong"></div></div>
+</div>
+<p id="cau"></p>
+
+<script src="be_du_lieu.js"></script>
+<script>
+const AI = window.BE.ai_day;
+const loa = new Audio();
+const $ = id => document.getElementById(id);
+let thu_tu = [], so = 0, dang_noi = false;
+
+if (!AI) {
+  document.body.innerHTML = '<p id="thieu">Chưa có ảnh cả nhà: đặt web/anh/ca_nha.jpg rồi chạy lại tao_be.py</p>';
+}
+
+function phat(file) {
+  return new Promise(xong => {
+    const het = setTimeout(xong, 10000);  // phòng khi loa không báo đọc xong
+    loa.onended = loa.onerror = () => { clearTimeout(het); xong(); };
+    loa.src = file;
+    loa.play().catch(() => { clearTimeout(het); xong(); });
+  });
+}
+const nghi = ms => new Promise(r => setTimeout(r, ms));
+
+function khoanh(nguoi, kieu) {
+  const v = $("vong");
+  v.className = "vong" + (nguoi ? " hien" + (kieu === "sai" ? " sai" : "") : "");
+  if (nguoi) { v.style.left = nguoi.x + "%"; v.style.top = nguoi.y + "%"; }
+}
+function phong_to(nguoi) {
+  $("cuon").style.transformOrigin = nguoi ? `${nguoi.x}% ${nguoi.y}%` : "";
+  $("cuon").style.transform = nguoi ? "scale(1.8)" : "";
+}
+
+// Cả chuỗi đọc chạy trong lúc dang_noi: bé chạm thêm trên điện thoại thì bỏ qua, không phát đè
+async function chay(viec) {
+  if (dang_noi) return;
+  dang_noi = true;
+  try { await viec(); } finally { dang_noi = false; }
+}
+
+function hoi() {
+  const n = thu_tu[so];
+  $("cau").textContent = n.ten + " đâu nhỉ?";
+  return phat(n.hoi);
+}
+
+function bat_dau() {
+  if (!AI) return;
+  thu_tu = AI.nguoi.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  so = 0;
+  khoanh(null); phong_to(null);
+  return hoi();
+}
+
+async function tra_loi(ma) {
+  if (!AI) return;
+  const n = thu_tu[so], chon = AI.nguoi.find(x => x.ma === ma);
+  if (!n || !chon) return;
+  if (chon !== n) {
+    // Sai: chỉ cho bé người vừa chạm là ai, rồi hỏi lại
+    khoanh(chon, "sai");
+    await phat(chon.sai);
+    khoanh(null);
+    return hoi();
+  }
+  $("cau").textContent = "Đúng rồi! " + n.ten + " đây!";
+  khoanh(n); phong_to(n);
+  await phat(n.dung);
+  await nghi(1500);
+  khoanh(null); phong_to(null);
+  so++;
+  if (so < thu_tu.length) return hoi();
+  $("cau").textContent = "Giỏi quá!";
+  await phat(AI.khen);
+  await nghi(1500);
+  return bat_dau();
+}
+
+// Từ tay cầm điện thoại: "be:ai_day" là chơi lại từ đầu, "be:ai_<mã>" là bé chạm ảnh người đó
+let hoat_dong = Date.now();
+new EventSource("/phim").onmessage = e => {
+  if (e.data === "man_cho") return;
+  hoat_dong = Date.now();
+  if (e.data === "be:ai_day") chay(bat_dau);
+  else if (e.data.startsWith("be:ai_")) chay(() => tra_loi(e.data.slice(6)));
+  else if (e.data.startsWith("be:")) location = "/be_tv.html#" + e.data.slice(3);
+  else location = e.data === "camera" ? "/camera.html" : "/";
+};
+addEventListener("keydown", e => { e.preventDefault(); if (e.key === "Escape") location = "/"; });
+
+// 60 giây bé không chạm gì thì về màn chờ, trừ khi đang là giờ Đố vui
+setInterval(() => {
+  if (Date.now() - hoat_dong < 60000) return;
+  fetch("/man-cho/trang-thai").then(r => r.json()).then(t => { if (t.che_do !== "do_vui") location = "/man_cho.html"; }).catch(() => {});
+}, 5000);
+
+if (AI) chay(bat_dau);
+</script>
+</body>
+</html>

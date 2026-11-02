@@ -90,14 +90,16 @@ new EventSource("/phim").onmessage = e => {
   if (e.data === "man_cho") return;  // màn chờ không kéo trang của em đi
   hoat_dong = Date.now();
   // Bé chạm liên tục trên điện thoại: đợi đọc xong câu này mới nhận hình mới, không phát đè
-  if (e.data.startsWith("be:")) { if (!dang_noi) hien(e.data.slice(3)); }
+  if (e.data.startsWith("be:ai_")) location = "/ai_day.html";
+  else if (e.data.startsWith("be:")) { if (!dang_noi) hien(e.data.slice(3)); }
   else location = e.data === "camera" ? "/camera.html" : "/";
 };
 fetch("/dia-chi").then(r => r.text()).then(t => {
   document.getElementById("dia-chi").textContent = t.replace("/tay-cam", "/be");
 });
 
-if (location.hash) hien(location.hash.slice(1));
+if (location.hash.startsWith("#ai_")) location = "/ai_day.html";  // trang khác chuyển "be:ai_..." sang đây
+else if (location.hash) hien(location.hash.slice(1));
 else { loa.src = window.BE.chao; loa.play().catch(() => {}); }
 </script>
 </body>

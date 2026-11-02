@@ -32,7 +32,10 @@
   <a href="/tay-cam">Sang tay cầm Đố vui của anh →</a>
 <script src="be_du_lieu.js"></script>
 <script>
-const { nhom } = window.BE;
+// Có ảnh cả nhà thì thêm thẻ cuối "Ai đây?": điện thoại hiện 4 ảnh tròn, TV hỏi "Ba đâu nhỉ?"
+const AI = window.BE.ai_day;
+const nhom = window.BE.nhom.concat(AI ? [{ ten: "Ai đây?", emoji: "🔍", mau: "#ffd166", ai: true,
+  muc: AI.nguoi.map(n => ({ ma: "ai_" + n.ma, emoji: "", chu: n.ten, anh: n.anh })) }] : []);
 let dang_chon = 0;
 
 function ve() {
@@ -50,7 +53,10 @@ const SU_KIEN_BAM = "onpointerdown" in window ? "pointerdown" : "touchstart";
 
 document.getElementById("the").addEventListener(SU_KIEN_BAM, e => {
   const nut = e.target.closest("button");
-  if (nut) { dang_chon = +nut.dataset.i; ve(); }
+  if (!nut) return;
+  dang_chon = +nut.dataset.i;
+  ve();
+  if (nhom[dang_chon].ai) fetch("/bam?phim=be:ai_day", { method: "POST" });  // TV sang trò Ai đây, bắt đầu lượt mới
 });
 document.getElementById("luoi").addEventListener(SU_KIEN_BAM, e => {
   const nut = e.target.closest("button");

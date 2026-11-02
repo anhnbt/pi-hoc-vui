@@ -53,12 +53,28 @@ NHOM = [  # (tên nhóm, emoji đại diện, màu nền, [(mã, emoji, chữ hi
 ]
 # Ảnh riêng thay cho emoji: đặt web/anh/<mã>.jpg (ví dụ ảnh của bé cho em_be). Thư mục này không đưa lên git.
 ANH = os.path.join(WEB, "anh")
+# Trò "Ai đây?": TV hiện ảnh cả nhà web/anh/ca_nha.jpg, hỏi từng người; bé chạm ảnh tròn trên điện thoại.
+# (mã ảnh tròn, tên gọi, vị trí mặt trong ảnh cả nhà theo % chiều ngang và chiều dọc)
+AI_DAY = [
+    ("bo_bo", "Ba", 66.9, 29.7),
+    ("me", "Mẹ", 30.7, 35.3),
+    ("anh", "Anh Khoai Tây", 46.4, 52.6),
+    ("em_be", "Dâu Tây", 62.9, 39.0),
+]
+AI_DAY_KHEN = "Giỏi quá! Cả nhà mình đây!"
+
+
+def cau_ai_day(ten):
+    return {"hoi": f"{ten} đâu nhỉ?", "dung": f"Đúng rồi! {ten} đây!", "sai": f"Đây là {ten}!"}
+
+
 CHAO = "Chào bé! Mình cùng tập nói nhé!"
 CANH_BAO_KHOC = "Bố mẹ ơi! Em bé đang khóc đấy!"  # may_chu.py đọc khi micro camera nghe tiếng khóc
 
 
 def main():
     can_doc = [CHAO, CANH_BAO_KHOC] + [doc for *_, muc in NHOM for *_, doc in muc]
+    can_doc += [AI_DAY_KHEN] + [c for _, ten, *_ in AI_DAY for c in cau_ai_day(ten).values()]
     os.makedirs(AM_THANH, exist_ok=True)
     con_thieu = [c for c in can_doc if not os.path.exists(os.path.join(AM_THANH, ten_file(c)))]
     print(f"{len(can_doc)} câu, cần tạo giọng {len(con_thieu)} câu", flush=True)
@@ -77,6 +93,13 @@ def main():
                           for ma, e, chu, doc in muc]}
                  for ten, emoji, mau, muc in NHOM],
     }
+    if os.path.exists(os.path.join(ANH, "ca_nha.jpg")):  # chỉ có trò "Ai đây?" khi đã đặt ảnh cả nhà
+        du_lieu["ai_day"] = {
+            "khen": "am_thanh/" + ten_file(AI_DAY_KHEN),
+            "nguoi": [{"ma": ma, "ten": ten, "x": x, "y": y, "anh": f"anh/{ma}.jpg",
+                       **{k: "am_thanh/" + ten_file(c) for k, c in cau_ai_day(ten).items()}}
+                      for ma, ten, x, y in AI_DAY],
+        }
     with open(os.path.join(WEB, "be_du_lieu.js"), "w", encoding="utf-8") as f:
         f.write("window.BE = " + json.dumps(du_lieu, ensure_ascii=False, indent=1) + ";\n")
     print("Xong!", flush=True)
