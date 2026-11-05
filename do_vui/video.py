@@ -11,8 +11,10 @@ DUOI_HOP_LE = (".mov", ".mp4", ".m4v")
 TOI_DA = 500 * 1024 * 1024          # mỗi video
 CHUA_TRONG = 1024 * 1024 * 1024     # thẻ nhớ phải còn trống chừng này sau khi nhận video
 
-khoa_phat = threading.Lock()
-dang_phat = {"ten": None, "p": None}
+khoa_phat = threading.RLock()
+# Hàng phát: ds là các tên theo thứ tự phát, vi_tri là video đang chiếu. Mỗi lần bấm phát/dừng thì
+# lan tăng lên, luồng phát của lần cũ thấy lan đã đổi thì tự thôi.
+dang_phat = {"ten": None, "p": None, "ds": [], "vi_tri": 0, "lap": False, "lan": 0}
 _do_dai = {}  # (tên, giờ sửa) -> số giây, để không gọi ffprobe mỗi lần mở danh sách
 
 
@@ -98,18 +100,24 @@ def so_giay(ten):
     return _do_dai[khoa]
 
 
-def danh_sach():
+def cac_ten():
+    """Tên các video, mới gửi lên trước: cũng là thứ tự phát lần lượt."""
     os.makedirs(THU_MUC, exist_ok=True)
+    ds = [t for t in os.listdir(THU_MUC)
+          if not t.startswith(".") and os.path.isfile(os.path.join(THU_MUC, t)) and ten_an_toan(t)]
+    return sorted(ds, key=lambda t: os.path.getmtime(os.path.join(THU_MUC, t)), reverse=True)
+
+
+def danh_sach():
     ds = []
-    for ten in os.listdir(THU_MUC):
+    for ten in cac_ten():
         p = os.path.join(THU_MUC, ten)
-        if ten.startswith(".") or not os.path.isfile(p) or not ten_an_toan(ten):
-            continue
         ds.append({"ten": ten, "mb": round(os.path.getsize(p) / 2**20, 1),
                    "ngay": time.strftime("%d/%m %H:%M", time.localtime(os.path.getmtime(p))),
-                   "giay": so_giay(ten), "_gio": os.path.getmtime(p)})
-    ds.sort(key=lambda v: v.pop("_gio"), reverse=True)  # mới gửi lên trước
-    return {"video": ds, "dang_phat": ten_dang_phat(), "con_trong_mb": con_trong() // 2**20}
+                   "giay": so_giay(ten)})
+    dang = ten_dang_phat()
+    return {"video": ds, "dang_phat": dang, "lap": dang_phat["lap"], "con_trong_mb": con_trong() // 2**20,
+            "thu_tu": f"{dang_phat['vi_tri'] + 1}/{len(dang_phat['ds'])}" if dang else None}
 
 
 def ten_dang_phat():
@@ -117,30 +125,102 @@ def ten_dang_phat():
     return dang_phat["ten"] if p and p.poll() is None else None
 
 
-def phat(ten):
-    """Phát toàn màn hình trên TV, có tiếng; hết video VLC tự tắt, TV về màn đang hiện trước đó."""
-    p = duong_dan(ten)
-    if not p:
+def hang_tu(ds, ten):
+    """Hàng phát khi bấm ▶ ở video ten: video đó rồi các video bên dưới; ten rỗng là cả danh sách."""
+    return ds[ds.index(ten):] if ten in ds else list(ds)
+
+
+def vi_tri_sau(vi_tri, so_video, lap):
+    """Video phát tiếp theo, None khi hết hàng mà không lặp."""
+    if vi_tri + 1 < so_video:
+        return vi_tri + 1
+    return 0 if lap and so_video else None
+
+
+def phat(ten=""):
+    """Phát lần lượt trên TV, toàn màn hình, có tiếng, bắt đầu từ video ten (rỗng: từ video đầu).
+    Hết hàng thì TV về màn đang hiện trước đó."""
+    if ten and not duong_dan(ten):
+        return False
+    ds = hang_tu(cac_ten(), ten_an_toan(ten) if ten else "")
+    if not ds:
         return False
     with khoa_phat:
         dung()
-        moi_truong = dict(os.environ, XDG_RUNTIME_DIR=f"/run/user/{os.getuid()}", WAYLAND_DISPLAY="wayland-0")
-        dang_phat["ten"] = os.path.basename(p)
-        dang_phat["p"] = subprocess.Popen(
-            ["cvlc", "--fullscreen", "--play-and-exit", "--no-video-title-show", "--no-osd", p],
-            env=moi_truong, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        dang_phat.update(ds=ds, vi_tri=0)
+        lan = dang_phat["lan"]
+    threading.Thread(target=_chay_hang, args=(lan,), daemon=True).start()
     return True
 
 
-def dung():
-    p = dang_phat["p"]
+def _sang_video_sau():
+    sau = vi_tri_sau(dang_phat["vi_tri"], len(dang_phat["ds"]), dang_phat["lap"])
+    if sau == 0:
+        dang_phat["ds"] = cac_ten()  # vòng lặp mới: có cả video vừa gửi lên
+    dang_phat["vi_tri"] = len(dang_phat["ds"]) if sau is None else sau
+
+
+def _video_toi_luot():
+    """Tên video tới lượt, bỏ qua video đã bị xoá trong lúc chờ; None khi hết hàng."""
+    for _ in range(1000):
+        ds, i = dang_phat["ds"], dang_phat["vi_tri"]
+        if i >= len(ds):
+            return None
+        if os.path.isfile(os.path.join(THU_MUC, ds[i])):
+            return ds[i]
+        _sang_video_sau()
+    return None
+
+
+def _chay_hang(lan):
+    moi_truong = dict(os.environ, XDG_RUNTIME_DIR=f"/run/user/{os.getuid()}", WAYLAND_DISPLAY="wayland-0")
+    while True:
+        with khoa_phat:
+            if dang_phat["lan"] != lan:
+                return
+            ten = _video_toi_luot()
+            if not ten:
+                return dung()
+            p = subprocess.Popen(
+                ["cvlc", "--fullscreen", "--play-and-exit", "--no-video-title-show", "--no-osd",
+                 os.path.join(THU_MUC, ten)],
+                env=moi_truong, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            dang_phat.update(ten=ten, p=p)
+        bat_dau = time.time()
+        p.wait()
+        if time.time() - bat_dau < 2:
+            time.sleep(2)  # VLC không mở được tệp: đừng mở lại liên tục khi đang lặp
+        with khoa_phat:
+            if dang_phat["lan"] != lan:
+                return
+            _sang_video_sau()
+
+
+def _tat(p):
     if p and p.poll() is None:
         p.terminate()
         try:
             p.wait(timeout=5)
         except subprocess.TimeoutExpired:
             p.kill()
-    dang_phat["ten"] = dang_phat["p"] = None
+
+
+def tiep():
+    """Bỏ qua video đang chiếu; luồng phát tự sang video sau."""
+    _tat(dang_phat["p"])
+
+
+def dat_lap(bat):
+    dang_phat["lap"] = bool(bat)
+
+
+def dung():
+    """Dừng cả hàng phát."""
+    with khoa_phat:
+        dang_phat["lan"] += 1
+        p = dang_phat["p"]
+        dang_phat.update(ten=None, p=None, ds=[], vi_tri=0)
+        _tat(p)
 
 
 def xoa(ten):
@@ -148,7 +228,7 @@ def xoa(ten):
     if not p:
         return False
     if ten_dang_phat() == os.path.basename(p):
-        dung()
+        tiep()  # xoá video đang chiếu thì sang video sau
     os.remove(p)
     anh = os.path.join(ANH_NHO, os.path.basename(p) + ".jpg")
     if os.path.exists(anh):

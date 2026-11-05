@@ -110,8 +110,9 @@ Mỗi lời nhắn được ghi vào `log.txt`.
 
 **Video lên TV:** mở `http://<ip-của-pi>:8080/video`, bấm **📤 Chọn video gửi lên Pi** để gửi video từ thư viện điện thoại
 (chọn được nhiều video, tối đa 500 MB mỗi video, Pi từ chối khi thẻ nhớ còn dưới 1 GB trống).
-Bấm ▶ để phát toàn màn hình trên TV bằng VLC (trình duyệt trên Pi không phát được video HEVC của iPhone),
-⏹ để dừng, 🗑 để xoá hẳn. Video nằm trong `~/hoc/video`, ngoài thư mục web và không đưa lên git
+Bấm ▶ ở một video để phát toàn màn hình trên TV bằng VLC (trình duyệt trên Pi không phát được video HEVC của iPhone),
+TV phát video đó rồi lần lượt các video bên dưới; **▶ Phát tất cả** phát từ video đầu, **🔁 Lặp** phát lại từ đầu khi hết.
+⏭ bỏ qua video đang chiếu, ⏹ dừng cả hàng, 🗑 xoá hẳn. Video nằm trong `~/hoc/video`, ngoài thư mục web và không đưa lên git
 ([do_vui/video.py](do_vui/video.py)). Cần VLC: `sudo apt install vlc`.
 
 ### Dùng từ xa (4G, công ty)

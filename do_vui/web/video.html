@@ -14,7 +14,15 @@
   button:active { filter: brightness(1.2); }
   button:disabled { opacity: .5; }
   #chon { height: 56px; background: var(--nhan); color: #2b2100; font-size: 18px; font-weight: 700; }
-  #dung { height: 52px; background: var(--do); font-size: 17px; font-weight: 700; display: none; }
+  .hang { display: flex; gap: 10px; }
+  .hang button { height: 52px; font-size: 17px; font-weight: 700; }
+  #dieu-khien { display: none; flex-direction: column; gap: 8px; }
+  #dang-chieu { text-align: center; color: var(--nhan); font-weight: 700; }
+  #dung { flex: 1; background: var(--do); }
+  #tiep { flex: 1; }
+  #tat-ca { flex: 1; }
+  #lap { width: 120px; flex: none; }
+  #lap.bat { background: var(--nhan); color: #2b2100; }
   #trang-thai { min-height: 1.3em; text-align: center; color: var(--phu); }
   .thanh { height: 8px; border-radius: 4px; background: var(--the); overflow: hidden; display: none; }
   .thanh div { height: 100%; width: 0; background: var(--nhan); transition: width .2s; }
@@ -38,14 +46,18 @@
   <input id="tep" type="file" accept="video/*" multiple hidden>
   <div class="thanh" id="thanh"><div></div></div>
   <p id="trang-thai"></p>
-  <button id="dung">⏹ Dừng video trên TV</button>
+  <div id="dieu-khien">
+    <p id="dang-chieu"></p>
+    <div class="hang"><button id="dung">⏹ Dừng</button><button id="tiep">⏭ Video tiếp</button></div>
+  </div>
+  <div class="hang"><button id="tat-ca">▶ Phát tất cả</button><button id="lap">🔁 Lặp: tắt</button></div>
   <div id="ds"></div>
   <p class="chan" id="con-trong"></p>
   <a href="/tay-cam">← Về tay cầm</a>
 <script>
 // Viết theo kiểu Safari cũ đọc được: không dùng ?. hay ??
 var trang_thai = document.getElementById("trang-thai"), thanh = document.getElementById("thanh");
-var dang_gui = false;
+var dang_gui = false, lap_bat = false;
 
 function phut_giay(s) {
   if (s == null) return "";
@@ -73,7 +85,9 @@ function ve(du_lieu) {
     ten.appendChild(b); ten.appendChild(nho);
     var phat = document.createElement("button");
     phat.className = "phat"; phat.textContent = "▶"; phat.setAttribute("aria-label", "Phát " + v.ten);
-    phat.onclick = function () { lenh("/video/phat?ten=" + encodeURIComponent(v.ten), "Đang phát trên TV: " + v.ten); };
+    phat.onclick = function () {
+      lenh("/video/phat?ten=" + encodeURIComponent(v.ten), "TV phát " + v.ten + " rồi tiếp các video bên dưới");
+    };
     var xoa = document.createElement("button");
     xoa.className = "xoa"; xoa.textContent = "🗑"; xoa.setAttribute("aria-label", "Xoá " + v.ten);
     xoa.onclick = function () {
@@ -82,7 +96,14 @@ function ve(du_lieu) {
     o.appendChild(anh); o.appendChild(ten); o.appendChild(phat); o.appendChild(xoa);
     ds.appendChild(o);
   });
-  document.getElementById("dung").style.display = du_lieu.dang_phat ? "block" : "none";
+  document.getElementById("dieu-khien").style.display = du_lieu.dang_phat ? "flex" : "none";
+  document.getElementById("dang-chieu").textContent = du_lieu.dang_phat ?
+    "📺 Đang phát " + du_lieu.thu_tu + ": " + du_lieu.dang_phat : "";
+  document.getElementById("tat-ca").disabled = !du_lieu.video.length;
+  lap_bat = du_lieu.lap;
+  var nut_lap = document.getElementById("lap");
+  nut_lap.className = lap_bat ? "bat" : "";
+  nut_lap.textContent = lap_bat ? "🔁 Lặp: bật" : "🔁 Lặp: tắt";
   document.getElementById("con-trong").textContent = "Thẻ nhớ Pi còn trống " + (du_lieu.con_trong_mb / 1024).toFixed(1) + " GB";
 }
 
@@ -133,6 +154,11 @@ document.getElementById("tep").onchange = function () {
   gui(ds, 0);
 };
 document.getElementById("dung").onclick = function () { lenh("/video/dung", "Đã dừng video"); };
+document.getElementById("tiep").onclick = function () { lenh("/video/tiep", "Đã sang video tiếp"); };
+document.getElementById("tat-ca").onclick = function () { lenh("/video/phat", "TV phát lần lượt tất cả video"); };
+document.getElementById("lap").onclick = function () {
+  lenh("/video/lap?bat=" + (lap_bat ? "0" : "1"), lap_bat ? "Hết danh sách thì dừng" : "Hết danh sách thì phát lại từ đầu");
+};
 
 tai();
 setInterval(function () { if (!dang_gui) tai(); }, 4000);  // để biết video phát xong chưa

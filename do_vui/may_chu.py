@@ -254,6 +254,13 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
         if url.path == "/video/dung":
             video.dung()
             return self.tra_json(video.danh_sach())
+        if url.path == "/video/tiep":
+            video.tiep()
+            time.sleep(0.5)  # để danh sách trả về đã sang video sau
+            return self.tra_json(video.danh_sach())
+        if url.path == "/video/lap":
+            video.dat_lap(parse_qs(url.query).get("bat", ["0"])[0] == "1")
+            return self.tra_json(video.danh_sach())
         if url.path == "/video/xoa":
             return self.tra_json(video.danh_sach()) if video.xoa(ten) else self.tra_loi_chu(404, "Không thấy video")
         return self.tra_loi_chu(404)
