@@ -16,6 +16,7 @@ khoa_phat = threading.RLock()
 # lan tăng lên, luồng phát của lần cũ thấy lan đã đổi thì tự thôi.
 dang_phat = {"ten": None, "p": None, "ds": [], "vi_tri": 0, "lap": False, "lan": 0}
 _do_dai = {}  # (tên, giờ sửa) -> số giây, để không gọi ffprobe mỗi lần mở danh sách
+_khoa_do_dai = threading.Lock()
 
 
 def ten_an_toan(ten):
@@ -90,6 +91,13 @@ def tao_anh_nho(ten):
 def so_giay(ten):
     p = os.path.join(THU_MUC, ten)
     khoa = (ten, os.path.getmtime(p))
+    # Mỗi lần chỉ một ffprobe: Pi đang bận thì ffprobe chậm, trang /video hỏi lại mỗi 4 giây
+    # sẽ chồng thêm ffprobe mới lên, Pi càng quá tải
+    with _khoa_do_dai:
+        return _so_giay(p, khoa)
+
+
+def _so_giay(p, khoa):
     if khoa not in _do_dai:
         try:
             ra = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", p],

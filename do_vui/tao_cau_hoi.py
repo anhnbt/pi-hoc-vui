@@ -9,7 +9,6 @@ nên chạy lại chỉ tạo phần còn thiếu. cau_hoi.js được ghi trư�
 import os, json, random, hashlib, datetime
 
 os.environ["HF_HUB_OFFLINE"] = "1"  # model đã tải sẵn, không cần mạng
-
 THU_MUC = os.path.dirname(os.path.abspath(__file__))
 WEB = os.path.join(THU_MUC, "web")
 AM_THANH = os.path.join(WEB, "am_thanh")
@@ -355,6 +354,7 @@ def main():
     con_thieu = [cau for f, cau in can_doc.items() if not os.path.exists(os.path.join(AM_THANH, f))]
     print(f"Cần tạo giọng {len(con_thieu)} câu", flush=True)
     if con_thieu:
+        os.nice(19)  # ưu tiên thấp nhất: con đang chơi thì TV vẫn mượt
         from vieneu import Vieneu
         tts = Vieneu()
         for i, cau in enumerate(con_thieu, 1):
