@@ -158,7 +158,11 @@ function noi(chu, giay = 2.5) {
 }
 
 // ---- Pháo hoa: chạy trong luồng riêng, ít mảnh để Pi không giật ----
-const phao = confetti.create(document.getElementById("phao"), { resize: true, useWorker: true });
+const ban_phao = confetti.create(document.getElementById("phao"), { resize: true, useWorker: true });
+// Thư viện tính theo điểm ảnh: mảnh khoảng 10px, bay vài trăm px. TV 4K cao 2160px nên pháo trông bé tí.
+// Phóng cả pháo theo chiều cao màn hình (cao 720px là chuẩn): mảnh to gấp 2,5 rồi nhân K, bay xa và rơi nhanh gấp K
+const K = Math.max(1, innerHeight / 720);
+const phao = o => ban_phao({ ...o, scalar: 2.5 * K, startVelocity: (o.startVelocity || 45) * K, gravity: K });
 function phao_o(o) {
   const r = o.getBoundingClientRect();
   phao({ particleCount: 40, spread: 70, startVelocity: 35, ticks: 120,
