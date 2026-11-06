@@ -9,7 +9,7 @@ import lich
 import loa_camera
 import video
 from tao_be import CANH_BAO_KHOC
-from tao_cau_hoi import AM_THANH, ten_file
+from tao_cau_hoi import AM_THANH, KET_QUA, ten_file
 
 THU_MUC = os.path.dirname(os.path.abspath(__file__))
 WEB = os.path.join(THU_MUC, "web")
@@ -269,6 +269,16 @@ class XuLy(http.server.SimpleHTTPRequestHandler):
         url = urlparse(self.path)
         if url.path.startswith("/video/"):
             return self.xu_ly_video(url)
+        if url.path == "/ket-qua":
+            # Đố vui báo con trả lời đúng hay sai: tối Chủ nhật sinh đề mới thì giữ lại câu con hay sai
+            q = parse_qs(url.query)
+            ma = q.get("id", [""])[0]
+            if not re.fullmatch(r"[0-9a-f]{12}", ma):
+                return self.tra_loi_chu(400, "id không hợp lệ")
+            with open(KET_QUA, "a", encoding="utf-8") as f:
+                f.write(json.dumps({"id": ma, "dung": q.get("dung", [""])[0] == "1",
+                                    "ngay": datetime.date.today().isoformat()}) + "\n")
+            return self.tra_json({"ok": True})
         if url.path == "/nghi-hoc":
             nghi = parse_qs(url.query).get("nghi", [""])[0]
             if nghi not in ("0", "1"):

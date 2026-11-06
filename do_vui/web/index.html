@@ -18,12 +18,17 @@
   .goi-y { font-size: 4vh; color: var(--phu); }
   .tien-do { display: flex; gap: 1.5vw; font-size: 5vh; }
   .tien-do span { opacity: .3; } .tien-do span.xong { opacity: 1; }
-  #cau { font-size: 13vh; font-weight: 700; min-height: 16vh; }
+  #man-choi { padding-left: 22vw; }
+  #cau { font-size: 13vh; font-weight: 700; min-height: 16vh; white-space: pre-line;
+    display: flex; align-items: center; justify-content: center; }
   #cau.nho { font-size: 8vh; }
-  .luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 3vh 3vw; width: 100%; max-width: 80vw; }
+  #cau.dai { font-size: 5.6vh; font-weight: 600; line-height: 1.35; max-width: 68vw; text-align: left; }
+  .luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 3vh 3vw; width: 100%; max-width: 70vw; }
   .o { height: 20vh; border-radius: 3vh; display: flex; align-items: center; justify-content: center;
     font-size: 9vh; font-weight: 700; border: 1vh solid transparent; transition: transform .15s;
     position: relative; cursor: pointer; }
+  .luoi.chu-dai .o { font-size: 5vh; }
+  #cau.dai + .luoi .o { height: 15vh; }
   .o small { position: absolute; top: 1.5vh; left: 2vh; font-size: 4vh; opacity: .7; }
   .o:nth-child(1) { background: var(--do); } .o:nth-child(2) { background: var(--xanh-la); }
   .o:nth-child(3) { background: var(--vang); color: #2b2100; } .o:nth-child(4) { background: var(--xanh-duong); }
@@ -34,6 +39,30 @@
   @keyframes nhay { 50% { transform: scale(1.15); } }
   @keyframes lac { 25% { transform: translateX(-2vw); } 75% { transform: translateX(2vw); } }
   #sao { font-size: 12vh; }
+
+  /* Chọn bạn đồng hành và chế độ chơi */
+  .hang-the { display: flex; gap: 4vw; }
+  .the { width: 32vh; padding: 2vh; border-radius: 3vh; background: #34466e; border: 1vh solid transparent;
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh; font-size: 4.5vh; font-weight: 700;
+    transition: transform .15s; cursor: pointer; }
+  .the.chon { border-color: var(--vang); transform: scale(1.08); box-shadow: 0 0 4vh rgba(245,180,0,.5); }
+  .the .mat { width: 20vh; height: 20vh; }
+  .the.che-do { width: 40vh; height: 30vh; justify-content: center; font-size: 5vh; }
+  .the.che-do b { font-size: 12vh; }
+
+  /* Bạn đồng hành: ảnh 3x3 vẻ mặt, nền trắng nên đặt trong vòng tròn trắng */
+  .mat { border-radius: 50%; background-color: #fff; background-size: 300% 300%; }
+  #ban { position: fixed; left: 3vw; bottom: 4vh; width: 30vh; height: 30vh; display: none;
+    box-shadow: 0 0 0 1vh rgba(255,255,255,.25); }
+  #ban.hien { display: block; }
+  #ban.nay { animation: nay .5s ease; }
+  @keyframes nay { 30% { transform: translateY(-3vh) scale(1.05); } 60% { transform: translateY(0) scale(.97); } }
+  #loi { position: fixed; left: 2vw; bottom: 37vh; max-width: 18vw; padding: 1.5vh 2vh; border-radius: 3vh;
+    background: #fff; color: #1b2a4a; font-size: 3.4vh; font-weight: 700; display: none; }
+  #loi::after { content: ""; position: absolute; left: 12vh; bottom: -2vh; border: 1.2vh solid transparent;
+    border-top: 1.4vh solid #fff; }
+  #loi.hien { display: block; }
+  #phao { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9; }
 </style>
 </head>
 <body>
@@ -42,6 +71,21 @@
   <h1>🎈 Đố vui cùng bố 🎈</h1>
   <p class="goi-y">Bấm nút <b>OK</b> trên điều khiển, hoặc phím <b>Enter</b>, để bắt đầu</p>
   <p class="goi-y">📱 Tay cầm điện thoại: <b id="dia-chi"></b></p>
+</section>
+
+<section class="man" id="man-ban">
+  <h1>Con chọn bạn chơi cùng nhé!</h1>
+  <div class="hang-the" id="cac-ban"></div>
+  <p class="goi-y">Bấm ◀ ▶ để chọn, rồi bấm <b>OK</b></p>
+</section>
+
+<section class="man" id="man-che_do">
+  <h1>Hôm nay mình chơi gì?</h1>
+  <div class="hang-the" id="cac-che-do">
+    <div class="the che-do"><b>🧮</b>Ôn thi Toán</div>
+    <div class="the che-do"><b>🎲</b>Đố vui trộn</div>
+  </div>
+  <p class="goi-y">Bấm ◀ ▶ để chọn, rồi bấm <b>OK</b></p>
 </section>
 
 <section class="man" id="man-choi">
@@ -56,13 +100,26 @@
   <p class="goi-y">Bấm <b>OK</b> để chơi lại</p>
 </section>
 
+<div class="mat" id="ban"></div>
+<div id="loi"></div>
+<canvas id="phao"></canvas>
+
 <script src="cau_hoi.js"></script>
+<script src="thu_vien/confetti.browser.js"></script>
 <script>
-const CO_CAU = { toan: 6, chinh_ta: 2, van: 2 };  // mỗi lượt chơi gồm từng này câu mỗi loại
+const CO_CAU = { toan: 6, chinh_ta: 2, van: 2 };  // Đố vui trộn: mỗi lượt gồm từng này câu mỗi loại
+const ON_THI = { loi_van: 3, khac: 7 };            // Ôn thi Toán: 10 câu toán, 3 câu có lời văn
 const MAU = { do: 0, xanh_la: 1, vang: 2, xanh_duong: 3 };
+
+// Bạn đồng hành (ảnh từ viettyping). Ô trong bảng 3x3: vẻ mặt và hướng nhìn
+const BAN = [{ ma: "dino", ten: "Khủng long" }, { ma: "cat", ten: "Mèo" }, { ma: "bear", ten: "Gấu" }];
+const VE_MAT = { chop: 0, tim: 1, lap_lanh: 2, ngac_nhien: 3, mat_sao: 4, ngai: 5, ngu: 6, chong_mat: 7, cuoi: 8 };
+const HUONG = { tren_phai: 2, giua: 4, phai: 5 };
 
 const loa = new Audio();
 let man = "dau", luot = [], so = 0, sao = 0, sai_lan_nay = false, o_chon = 0, dang_cho = false;
+let chon_ban = 0, chon_che_do = 0, chuoi_dung = 0, da_ghi = false;
+try { chon_ban = Math.min(BAN.length - 1, +localStorage.getItem("ban_dong_hanh") || 0); } catch (e) {}
 
 function phat(file) {
   return new Promise(xong => {
@@ -76,29 +133,121 @@ const tron = ds => ds.map(x => [Math.random(), x]).sort((a, b) => a[0] - b[0]).m
 const doi_man = ten => {
   man = ten;
   document.querySelectorAll(".man").forEach(m => m.classList.toggle("hien", m.id === "man-" + ten));
+  document.getElementById("ban").classList.toggle("hien", ten === "choi" || ten === "cuoi");
+  if (ten !== "choi" && ten !== "cuoi") noi("");
 };
+
+// ---- Bạn đồng hành ----
+function ve_mat(o, ma, kieu, i) {
+  o.style.backgroundImage = `url(ban/${ma}-${kieu}.webp)`;
+  o.style.backgroundPosition = `${(i % 3) * 50}% ${Math.floor(i / 3) * 50}%`;
+}
+const nha = document.getElementById("ban");
+function mat(ve, nay) {
+  ve_mat(nha, BAN[chon_ban].ma, "reactions", VE_MAT[ve]);
+  if (nay) { nha.classList.remove("nay"); void nha.offsetWidth; nha.classList.add("nay"); }
+}
+function nhin(o) { ve_mat(nha, BAN[chon_ban].ma, "directions", o < 2 ? HUONG.tren_phai : HUONG.phai); }
+let hen_loi;
+function noi(chu, giay = 2.5) {
+  const loi = document.getElementById("loi");
+  loi.textContent = chu;
+  loi.classList.toggle("hien", !!chu);
+  clearTimeout(hen_loi);
+  if (chu && giay) hen_loi = setTimeout(() => loi.classList.remove("hien"), giay * 1000);
+}
+
+// ---- Pháo hoa: chạy trong luồng riêng, ít mảnh để Pi không giật ----
+const phao = confetti.create(document.getElementById("phao"), { resize: true, useWorker: true });
+function phao_o(o) {
+  const r = o.getBoundingClientRect();
+  phao({ particleCount: 40, spread: 70, startVelocity: 35, ticks: 120,
+         origin: { x: (r.left + r.width / 2) / innerWidth, y: (r.top + r.height / 2) / innerHeight } });
+}
+function phao_hai_ben() {
+  phao({ particleCount: 60, angle: 60, spread: 60, origin: { x: 0, y: 0.8 } });
+  phao({ particleCount: 60, angle: 120, spread: 60, origin: { x: 1, y: 0.8 } });
+}
+function phao_cuoi(so_sao) {
+  const het = Date.now() + 2000 + 300 * so_sao;
+  (function ban() {
+    phao({ particleCount: 30, spread: 90, startVelocity: 40, ticks: 160,
+           origin: { x: 0.2 + Math.random() * 0.6, y: 0.3 + Math.random() * 0.3 } });
+    if (Date.now() < het) setTimeout(ban, 300);
+  })();
+}
+
+// ---- Chọn bạn và chế độ ----
+function ve_chon_ban() {
+  document.querySelectorAll("#cac-ban .the").forEach((t, i) => t.classList.toggle("chon", i === chon_ban));
+}
+function hien_chon_ban() {
+  const hang = document.getElementById("cac-ban");
+  hang.innerHTML = "";
+  BAN.forEach((b, i) => {
+    const t = document.createElement("div"), m = document.createElement("div");
+    t.className = "the"; m.className = "mat";
+    ve_mat(m, b.ma, "reactions", VE_MAT.chop);
+    t.append(m, b.ten);
+    t.onclick = () => { chon_ban = i; xong_chon_ban(); };
+    hang.append(t);
+  });
+  ve_chon_ban();
+  doi_man("ban");
+}
+function xong_chon_ban() {
+  try { localStorage.setItem("ban_dong_hanh", chon_ban); } catch (e) {}
+  chon_che_do = 0;
+  ve_chon_che_do();
+  doi_man("che_do");
+}
+function ve_chon_che_do() {
+  document.querySelectorAll("#cac-che-do .the").forEach((t, i) => t.classList.toggle("chon", i === chon_che_do));
+}
+document.querySelectorAll("#cac-che-do .the").forEach((t, i) => t.onclick = () => { chon_che_do = i; bat_dau(); });
+
+// ---- Lượt chơi ----
+function luot_on_thi(cau_hoi) {
+  const toan = cau_hoi.filter(c => c.loai === "toan");
+  const loi_van = tron(toan.filter(c => c.dang === "loi_van")).slice(0, ON_THI.loi_van);
+  // Các dạng khác lấy xoay vòng từng dạng một, để lượt nào cũng đủ kiểu
+  const theo_dang = {};
+  tron(toan.filter(c => c.dang !== "loi_van")).forEach(c => (theo_dang[c.dang] = theo_dang[c.dang] || []).push(c));
+  const khac = [], dang = tron(Object.keys(theo_dang));
+  for (let i = 0; khac.length < ON_THI.khac && i < 100; i++) {
+    const c = theo_dang[dang[i % dang.length]].pop();
+    if (c) khac.push(c);
+  }
+  return tron([...loi_van, ...khac]);
+}
 
 function bat_dau() {
   const { cau_hoi, am } = window.DU_LIEU;
-  luot = tron(Object.entries(CO_CAU).flatMap(([loai, n]) => tron(cau_hoi.filter(c => c.loai === loai)).slice(0, n)));
-  so = 0; sao = 0;
+  luot = chon_che_do === 0 ? luot_on_thi(cau_hoi)
+    : tron(Object.entries(CO_CAU).flatMap(([loai, n]) => tron(cau_hoi.filter(c => c.loai === loai)).slice(0, n)));
+  so = 0; sao = 0; chuoi_dung = 0;
   doi_man("choi");
+  mat("cuoi", true);
+  noi("Cố lên nào!");
   phat(am.mo_dau).then(hien_cau);
 }
 
 function hien_cau() {
   const c = luot[so];
-  sai_lan_nay = false; o_chon = 0; dang_cho = false;
+  sai_lan_nay = false; o_chon = 0; dang_cho = false; da_ghi = false;
   document.getElementById("tien-do").innerHTML =
     luot.map((_, i) => `<span class="${i < so ? "xong" : ""}">⭐</span>`).join("");
   const cau = document.getElementById("cau");
   cau.textContent = c.hien;
-  cau.classList.toggle("nho", c.loai !== "toan");
+  cau.classList.toggle("dai", c.hien.length > 40);
+  cau.classList.toggle("nho", c.hien.length <= 40 && (c.loai !== "toan" || c.hien.length > 14));
   c.lua_chon = tron([c.dung, ...c.sai]);
-  document.getElementById("luoi").innerHTML =
-    c.lua_chon.map((x, i) => `<div class="o"><small>${i + 1}</small>${x}</div>`).join("");
+  const luoi = document.getElementById("luoi");
+  luoi.innerHTML = c.lua_chon.map((x, i) => `<div class="o"><small>${i + 1}</small>${x}</div>`).join("");
+  luoi.classList.toggle("chu-dai", c.lua_chon.some(x => x.length > 6));
   cac_o().forEach((o, i) => o.onclick = () => tra_loi(i));
   ve_chon();
+  mat("chop");
   phat(c.am);
 }
 
@@ -113,6 +262,15 @@ function di_chuyen(huong) {
   if (moi < 0 || moi >= n) return;
   o_chon = moi;
   ve_chon();
+  nhin(o_chon);
+  noi("");
+}
+
+// Báo máy chủ câu này con làm đúng ngay lần đầu hay không, để đề tuần sau giữ lại câu hay sai
+function ghi_ket_qua(c, dung) {
+  if (da_ghi || !c.id) return;
+  da_ghi = true;
+  fetch(`/ket-qua?id=${c.id}&dung=${dung ? 1 : 0}`, { method: "POST" }).catch(() => {});
 }
 
 async function tra_loi(i) {
@@ -121,15 +279,25 @@ async function tra_loi(i) {
   o_chon = i; ve_chon();
   if (c.lua_chon[i] === c.dung) {
     dang_cho = true;
-    if (!sai_lan_nay) sao++;
+    ghi_ket_qua(c, true);
+    if (!sai_lan_nay) { sao++; chuoi_dung++; } else chuoi_dung = 0;
     o.classList.add("dung");
+    if (chuoi_dung > 0 && chuoi_dung % 3 === 0) {
+      phao_hai_ben(); mat("lap_lanh", true); noi(`${chuoi_dung} câu liền! Siêu quá!`);
+    } else {
+      phao_o(o); mat(ngau_nhien(["mat_sao", "cuoi"]), true); noi(ngau_nhien(["Giỏi quá!", "Đúng rồi!", "Tuyệt vời!"]));
+    }
     await phat(ngau_nhien(am.khen));
     so++;
     if (so < luot.length) hien_cau(); else ket_thuc();
   } else {
+    ghi_ket_qua(c, false);
     sai_lan_nay = true;
+    chuoi_dung = 0;
     o.classList.add("lac", "loai");
     setTimeout(() => o.classList.remove("lac"), 400);
+    mat(ngau_nhien(["ngac_nhien", "chong_mat"]), true);
+    noi(ngau_nhien(["Thử lại nhé!", "Gần đúng rồi!"]));
     phat(ngau_nhien(am.sai));
   }
 }
@@ -137,6 +305,9 @@ async function tra_loi(i) {
 function ket_thuc() {
   document.getElementById("sao").textContent = `⭐ ${sao} / ${luot.length} ⭐`;
   doi_man("cuoi");
+  mat("tim", true);
+  noi(sao >= luot.length - 1 ? "Con giỏi nhất!" : "Mình chơi tiếp nhé!", 0);
+  phao_cuoi(sao);
   phat(window.DU_LIEU.am.ket_thuc);
 }
 
@@ -144,12 +315,26 @@ function ket_thuc() {
 const trang_thai = () => fetch("/man-cho/trang-thai").then(r => r.json()).catch(() => null);
 
 function bam(phim) {
+  if (man === "ban") {
+    if (phim in MAU && MAU[phim] < BAN.length) { chon_ban = MAU[phim]; return xong_chon_ban(); }
+    if (phim === "trai" || phim === "len") chon_ban = Math.max(0, chon_ban - 1);
+    if (phim === "phai" || phim === "xuong") chon_ban = Math.min(BAN.length - 1, chon_ban + 1);
+    if (phim === "chon") return xong_chon_ban();
+    return ve_chon_ban();
+  }
+  if (man === "che_do") {
+    if (phim === "do" || phim === "xanh_la") { chon_che_do = MAU[phim]; return bat_dau(); }
+    if (phim === "trai" || phim === "len") chon_che_do = 0;
+    if (phim === "phai" || phim === "xuong") chon_che_do = 1;
+    if (phim === "chon") return bat_dau();
+    return ve_chon_che_do();
+  }
   if (man !== "choi") {
     if (phim !== "chon") return;
     // Đang khoá Đố vui (giờ việc buổi sáng) thì về màn chờ, không bắt đầu lượt mới
     trang_thai().then(t => {
-      if (man === "choi") return;  // đã có lượt khác bắt đầu trong lúc chờ máy chủ
-      if (t && t.khoa_do_vui) location = "/man_cho.html"; else bat_dau();
+      if (man !== "dau" && man !== "cuoi") return;  // đã sang màn khác trong lúc chờ máy chủ
+      if (t && t.khoa_do_vui) location = "/man_cho.html"; else hien_chon_ban();
     });
     return;
   }
@@ -194,7 +379,9 @@ new EventSource("/phim").onmessage = e => {
 // 60 giây không ai bấm thì về màn chờ, trừ khi đang là giờ Đố vui.
 // Đang giữa lượt thì đợi 3 phút: lượt bỏ dở (ví dụ lỡ tay bấm OK) không giữ TV mãi ở câu hỏi
 setInterval(() => {
-  if (Date.now() - hoat_dong < (man === "choi" ? 180000 : 60000)) return;
+  const nghi = Date.now() - hoat_dong;
+  if (man === "choi" && nghi > 20000 && !dang_cho) { mat("ngu"); noi("Zzz… Con nghĩ xong chưa?", 0); }
+  if (nghi < (man === "choi" ? 180000 : 60000)) return;
   trang_thai().then(t => { if (t && t.che_do !== "do_vui") location = "/man_cho.html"; });
 }, 5000);
 fetch("/dia-chi").then(r => r.text()).then(t => document.getElementById("dia-chi").textContent = t);

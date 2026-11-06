@@ -9,7 +9,7 @@ nhắc giờ sáng tối. Toàn bộ chạy **trong nhà, không cần internet*
 
 | | Mô tả |
 |---|---|
-| 🎮 **Đố vui trên TV** ([do_vui/](do_vui)) | 66 câu: cộng trừ có nhớ, bảng nhân 2 và 5, chính tả (s/x, l/n, tr/ch, hỏi/ngã), tìm vần. Mỗi lượt 10 câu, có giọng đọc, có sao thưởng. |
+| 🎮 **Đố vui trên TV** ([do_vui/](do_vui)) | Khoảng 250 câu Toán lớp 2 (Kết nối tri thức, nửa đầu học kì I: cộng trừ qua 10, tìm số còn thiếu, số đến 100, toán có lời văn, đơn vị đo), đổi đề mỗi tuần, giữ lại câu con hay sai; thêm chính tả và tìm vần. Hai chế độ: Ôn thi Toán và Đố vui trộn. Con chọn bạn đồng hành, trả lời đúng có pháo hoa. |
 | 📱 **Tay cầm điện thoại** | Mở `http://<ip-của-pi>:8080/tay-cam` trên điện thoại: 4 nút màu to, nút OK, nút Nghe lại. |
 | 👶 **Bé tập nói** (cho bé khoảng 2 tuổi) | Bé chạm hình trên điện thoại (`http://<ip-của-pi>:8080/be`) hoặc đập bàn phím: TV hiện hình to và đọc *"Con mèo. Meo meo! Mèo."*. Có 32 từ trong 5 nhóm: con vật, nhà mình, ăn uống, đồ chơi, cơ thể. |
 | ☀️ **Chào buổi sáng** ([chao_sang.py](chao_sang.py)) | Đọc thứ, ngày tháng và một câu đố cộng, rồi đọc đáp án sau 15 giây. |
@@ -48,13 +48,19 @@ sudo timedatectl set-timezone Asia/Ho_Chi_Minh
 
 ```bash
 cd ~/hoc/do_vui
-../vieneu-venv/bin/python tao_cau_hoi.py   # tạo giọng đọc cho kho câu hỏi, Pi 4 mất khoảng 10 phút
+../vieneu-venv/bin/python tao_cau_hoi.py   # sinh đề tuần này và tạo giọng đọc, Pi 4 mất khoảng 30–60 phút
 ../vieneu-venv/bin/python tao_be.py        # tạo giọng đọc cho Bé tập nói, khoảng 5 phút
 bash cai_dat.sh                            # máy chủ tự chạy + trò chơi tự mở khi bật Pi
 ./mo_tro_choi.sh                           # mở ngay, không cần khởi động lại
 ```
 
-Thêm câu hỏi: sửa danh sách trong `tao_cau_hoi.py` rồi chạy lại. Câu nào đã có giọng đọc thì được bỏ qua.
+Đề đổi theo tuần: cron chạy `tao_cau_hoi.py` lúc 0:30 sáng thứ Hai
+(`30 0 * * 1 /home/wanbi/hoc/vieneu-venv/bin/python /home/wanbi/hoc/do_vui/tao_cau_hoi.py`).
+Mỗi lần con trả lời, TV báo về máy chủ (`~/hoc/ket_qua.jsonl`), câu con làm sai trong 7 ngày được giữ sang đề mới.
+Thêm dạng câu: viết thêm một hàm trong `tao_cau_hoi.py` và khai báo số câu trong `SO_CAU`.
+
+Bạn đồng hành lấy từ [viettyping](https://github.com/anhnbt/viettyping) (`web/ban/`), pháo hoa dùng
+[canvas-confetti](https://github.com/catdad/canvas-confetti) (giấy phép ISC, `web/thu_vien/`).
 
 | Điều khiển | Chọn ô | Trả lời | Nghe lại |
 |---|---|---|---|
