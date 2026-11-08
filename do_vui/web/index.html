@@ -46,6 +46,11 @@
     display: flex; flex-direction: column; align-items: center; gap: 1.5vh; font-size: 4.5vh; font-weight: 700;
     transition: transform .15s; cursor: pointer; }
   .the.chon { border-color: var(--vang); transform: scale(1.08); box-shadow: 0 0 4vh rgba(245,180,0,.5); }
+  .the { position: relative; }
+  /* Số và màu trùng nút trên tay cầm điện thoại và nút màu trên điều khiển TV */
+  .the i { position: absolute; top: -2vh; left: -2vh; width: 8vh; height: 8vh; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 5vh;
+    color: #fff; box-shadow: 0 .5vh 1vh rgba(0,0,0,.4); }
   .the .mat { width: 20vh; height: 20vh; }
   .the.che-do { width: 40vh; height: 30vh; justify-content: center; font-size: 5vh; }
   .the.che-do b { font-size: 12vh; }
@@ -76,16 +81,16 @@
 <section class="man" id="man-ban">
   <h1>Con chọn bạn chơi cùng nhé!</h1>
   <div class="hang-the" id="cac-ban"></div>
-  <p class="goi-y">Bấm ◀ ▶ để chọn, rồi bấm <b>OK</b></p>
+  <p class="goi-y">Bấm nút số cùng màu trên tay cầm, hoặc ◀ ▶ rồi <b>OK</b></p>
 </section>
 
 <section class="man" id="man-che_do">
   <h1>Hôm nay mình chơi gì?</h1>
   <div class="hang-the" id="cac-che-do">
-    <div class="the che-do"><b>🧮</b>Ôn thi Toán</div>
-    <div class="the che-do"><b>🎲</b>Đố vui trộn</div>
+    <div class="the che-do"><i style="background:#e5484d">1</i><b>🧮</b>Ôn thi Toán</div>
+    <div class="the che-do"><i style="background:#30a46c">2</i><b>🎲</b>Đố vui trộn</div>
   </div>
-  <p class="goi-y">Bấm ◀ ▶ để chọn, rồi bấm <b>OK</b></p>
+  <p class="goi-y">Bấm nút số cùng màu trên tay cầm, hoặc ◀ ▶ rồi <b>OK</b></p>
 </section>
 
 <section class="man" id="man-choi">
@@ -110,6 +115,7 @@
 const CO_CAU = { toan: 6, chinh_ta: 2, van: 2 };  // Đố vui trộn: mỗi lượt gồm từng này câu mỗi loại
 const ON_THI = { loi_van: 3, khac: 7 };            // Ôn thi Toán: 10 câu toán, 3 câu có lời văn
 const MAU = { do: 0, xanh_la: 1, vang: 2, xanh_duong: 3 };
+const MAU_NUT = ["#e5484d", "#30a46c", "#f5b400", "#3e7bfa"];  // màu nút 1 2 3 4 trên tay cầm
 
 // Bạn đồng hành (ảnh từ viettyping). Ô trong bảng 3x3: vẻ mặt và hướng nhìn
 const BAN = [{ ma: "dino", ten: "Khủng long" }, { ma: "cat", ten: "Mèo" }, { ma: "bear", ten: "Gấu" }];
@@ -192,7 +198,9 @@ function hien_chon_ban() {
     const t = document.createElement("div"), m = document.createElement("div");
     t.className = "the"; m.className = "mat";
     ve_mat(m, b.ma, "reactions", VE_MAT.chop);
-    t.append(m, b.ten);
+    const so = document.createElement("i");
+    so.textContent = i + 1; so.style.background = MAU_NUT[i];
+    t.append(so, m, b.ten);
     t.onclick = () => { chon_ban = i; xong_chon_ban(); };
     hang.append(t);
   });
