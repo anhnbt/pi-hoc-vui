@@ -7,6 +7,7 @@ import json, os
 
 from tao_cau_hoi import AM_THANH, WEB, ten_file
 
+# Không dùng hình bộ phận cơ thể rời (mắt, mũi, tay, chân…): bé 2 tuổi nhìn thấy sợ
 NHOM = [  # (tên nhóm, emoji đại diện, màu nền, [(mã, emoji, chữ hiện, câu đọc)])
     ("Con vật", "🐱", "#ffb84d", [
         ("meo", "🐱", "con mèo", "Con mèo. Meo meo! Mèo."),
@@ -41,14 +42,6 @@ NHOM = [  # (tên nhóm, emoji đại diện, màu nền, [(mã, emoji, chữ hi
         ("may_bay", "✈️", "máy bay", "Máy bay. Vù vù! Máy bay."),
         ("sach", "📖", "quyển sách", "Quyển sách. Mình đọc sách nhé! Sách."),
         ("giay", "👟", "đôi giày", "Đôi giày. Đi giày đi chơi nào! Giày."),
-    ]),
-    ("Cơ thể", "👀", "#c9a7ff", [
-        ("mat", "👀", "mắt", "Mắt đâu? Mắt đây! Mắt."),
-        ("mui", "👃", "mũi", "Mũi đâu? Mũi đây! Mũi."),
-        ("tai", "👂", "tai", "Tai đâu? Tai đây! Tai."),
-        ("mieng", "👄", "miệng", "Miệng đâu? Miệng đây! Miệng."),
-        ("tay", "✋", "tay", "Tay đâu? Tay đây! Vỗ tay nào!"),
-        ("chan", "🦶", "chân", "Chân đâu? Chân đây! Chân."),
     ]),
 ]
 # Ảnh riêng thay cho emoji: đặt web/anh/<mã>.jpg (ví dụ ảnh của bé cho em_be). Thư mục này không đưa lên git.

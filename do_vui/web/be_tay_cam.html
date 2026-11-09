@@ -20,7 +20,11 @@
   .luoi button { border: none; border-radius: 24px; font-size: 18vw; line-height: 1;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     transition: transform .08s; }
-  .luoi button img { width: 18vw; height: 18vw; object-fit: cover; border-radius: 50%; border: 3px solid #fff; }
+  /* Ảnh người nhà phủ kín cả ô cho bé nhìn rõ mặt; tên nằm trên dải trắng ở đáy ảnh */
+  .luoi button { position: relative; overflow: hidden; }
+  .luoi button img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .luoi button img + small { position: absolute; left: 0; right: 0; bottom: 0; padding: 4px 0;
+    background: rgba(255,255,255,.85); }
   .luoi button small { font-size: 18px; font-weight: 600; color: var(--chu); }
   .luoi button:active { transform: scale(.92); }
   a { text-align: center; color: var(--chu); opacity: .6; font-size: 14px; }

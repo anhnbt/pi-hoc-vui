@@ -15,7 +15,9 @@
   .goi-y { font-size: 4vh; opacity: .7; }
   /* Chỉ định font emoji màu, nếu không DejaVu sẽ vẽ một số con vật (🐱 🐶...) thành nét đen trắng */
   #emoji { font-size: 50vh; line-height: 1.1; font-family: "Noto Color Emoji", sans-serif; }
-  #emoji img { height: 50vh; width: 50vh; object-fit: cover; border-radius: 50%; border: 1.5vh solid #fff; }
+  /* Ảnh người nhà: khung bo góc to gần hết màn hình thay cho vòng tròn nhỏ */
+  #emoji img { height: 68vh; width: 68vh; object-fit: cover; border-radius: 5vh; border: 1.5vh solid #fff;
+    box-shadow: 0 2vh 5vh rgba(0,0,0,.2); display: block; }
   #chu { font-size: 14vh; font-weight: 700; }
   .nay { animation: nay .7s cubic-bezier(.3, 1.6, .5, 1); }
   @keyframes nay { from { transform: scale(.2) rotate(-12deg); opacity: 0; } }

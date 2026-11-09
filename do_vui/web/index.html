@@ -404,12 +404,14 @@ new EventSource("/phim").onmessage = e => {
     trang_thai().then(t => { if (t && t.che_do !== "do_vui" && (!dang_choi_that || t.khoa_do_vui)) location = "/man_cho.html"; });
     return;
   }
+  // Đang thật sự chơi (bấm trong 60 giây qua) thì không chuyển sang trò của em hay camera.
+  // Lượt bỏ dở (ví dụ khủng long đã ngủ gật) thì không giữ TV lại
+  const dang_choi_that = man === "choi" && Date.now() - hoat_dong < 60000;
   if (!e.data.startsWith("be:") && e.data !== "camera") hoat_dong = Date.now();
-  // Đang chơi dở một lượt thì không chuyển sang trò của em hay camera
   if (e.data === "dong_ho") location = "/man_cho.html?giu=1";  // bố mẹ bấm từ điện thoại: sang đồng hồ cả khi đang chơi
-  else if (e.data === "camera") { if (man !== "choi") location = "/camera.html"; }
+  else if (e.data === "camera") { if (!dang_choi_that) location = "/camera.html"; }
   else if (!e.data.startsWith("be:")) bam(e.data);
-  else if (man !== "choi") location = "/be_tv.html#" + e.data.slice(3);
+  else if (!dang_choi_that) location = "/be_tv.html#" + e.data.slice(3);
 };
 // 60 giây không ai bấm thì về màn chờ, trừ khi đang là giờ Đố vui.
 // Đang giữa lượt thì đợi 3 phút: lượt bỏ dở (ví dụ lỡ tay bấm OK) không giữ TV mãi ở câu hỏi
