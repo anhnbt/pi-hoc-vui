@@ -2,68 +2,84 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<title>Đố vui</title>
+<title>Đố Vui Nhà Khoai</title>
+<link rel="icon" href="logo.svg">
+<!-- Chữ Baloo 2 (tròn, dày, đủ dấu tiếng Việt). Mất mạng thì dùng chữ có sẵn trên Pi -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap">
 <style>
+  /* Phong cách "Khoai nướng ấm áp": nền kem, chữ nâu khoai, điểm nhấn cam.
+     Bốn ô đáp án giữ đúng màu bốn nút trên tay cầm */
   :root {
-    --nen: #1b2a4a; --chu: #ffffff; --phu: #b9c6e4;
+    --nen: #fff7ea; --nen-2: #ffd6a0; --chu: #7a4a1c; --phu: #a8693a; --cam: #f26b3a; --cam-dam: #b8481f;
+    --vien: #3b2a1e; --the: #ffffff; --bong-the: #e6c79a;
     --do: #e5484d; --xanh-la: #30a46c; --vang: #f5b400; --xanh-duong: #3e7bfa;
   }
   * { box-sizing: border-box; margin: 0; }
-  html, body { height: 100%; background: var(--nen); color: var(--chu); overflow: hidden;
-    font-family: "Noto Sans", "DejaVu Sans", sans-serif; }
+  html, body { height: 100%; color: var(--chu); overflow: hidden;
+    background: radial-gradient(circle at 50% 0%, var(--nen), var(--nen-2)) fixed;
+    font-family: "Baloo 2", "Noto Sans", "DejaVu Sans", sans-serif; font-weight: 600; }
   .man { display: none; height: 100%; flex-direction: column; align-items: center;
     justify-content: center; gap: 4vh; padding: 4vh 6vw; text-align: center; }
   .man.hien { display: flex; }
-  h1 { font-size: 9vh; }
+  h1 { font-size: 9vh; font-weight: 800; line-height: 1.1; }
   .goi-y { font-size: 4vh; color: var(--phu); }
-  .tien-do { display: flex; gap: 1.5vw; font-size: 5vh; }
-  .tien-do span { opacity: .3; } .tien-do span.xong { opacity: 1; }
-  #man-choi { padding-left: 22vw; }
-  #cau { font-size: 13vh; font-weight: 700; min-height: 16vh; white-space: pre-line;
+  .nut-cam { background: var(--cam); color: #fff; border-radius: 99vh; padding: 1.5vh 6vh; font-size: 5vh;
+    font-weight: 800; box-shadow: 0 1vh 0 var(--cam-dam); }
+  #man-dau .logo { width: 30vh; height: 30vh; animation: lac-lu 3s ease-in-out infinite; }
+  #man-dau h1 { font-size: 12vh; }
+  #man-dau .khau-hieu { font-size: 5vh; color: var(--phu); margin-top: -3vh; }
+  @keyframes lac-lu { 50% { transform: rotate(-4deg) translateY(-1vh); } }
+  .thanh { position: fixed; top: 3vh; left: 4vw; right: 4vw; display: flex; justify-content: space-between;
+    align-items: center; font-size: 4.5vh; font-weight: 800; }
+  .thanh span { background: var(--the); border-radius: 99vh; padding: .5vh 3vh; box-shadow: 0 .6vh 0 var(--bong-the); }
+  #man-choi { padding-left: 22vw; padding-top: 12vh; }
+  #cau { font-size: 13vh; font-weight: 800; min-height: 16vh; white-space: pre-line;
     display: flex; align-items: center; justify-content: center; }
   #cau.nho { font-size: 8vh; }
   #cau.dai { font-size: 5.6vh; font-weight: 600; line-height: 1.35; max-width: 68vw; text-align: left; }
   .luoi { display: grid; grid-template-columns: 1fr 1fr; gap: 3vh 3vw; width: 100%; max-width: 70vw; }
   .o { height: 20vh; border-radius: 3vh; display: flex; align-items: center; justify-content: center;
-    font-size: 9vh; font-weight: 700; border: 1vh solid transparent; transition: transform .15s;
-    position: relative; cursor: pointer; }
+    font-size: 9vh; font-weight: 800; border: 1vh solid transparent; transition: transform .15s;
+    position: relative; cursor: pointer; color: #fff; box-shadow: 0 1vh 0 rgba(0,0,0,.18); }
   .luoi.chu-dai .o { font-size: 5vh; }
   #cau.dai + .luoi .o { height: 15vh; }
   .o small { position: absolute; top: 1.5vh; left: 2vh; font-size: 4vh; opacity: .7; }
   .o:nth-child(1) { background: var(--do); } .o:nth-child(2) { background: var(--xanh-la); }
   .o:nth-child(3) { background: var(--vang); color: #2b2100; } .o:nth-child(4) { background: var(--xanh-duong); }
-  .o.chon { border-color: var(--chu); transform: scale(1.06); box-shadow: 0 0 4vh rgba(255,255,255,.5); }
+  .o.chon { border-color: var(--vien); transform: scale(1.06); box-shadow: 0 0 0 1vh var(--the), 0 0 5vh rgba(242,107,58,.7); }
   .o.loai { opacity: .2; }
   .o.dung { animation: nhay .5s ease 2; }
   .o.lac { animation: lac .4s; }
   @keyframes nhay { 50% { transform: scale(1.15); } }
   @keyframes lac { 25% { transform: translateX(-2vw); } 75% { transform: translateX(2vw); } }
-  #sao { font-size: 12vh; }
+  #sao { font-size: 10vh; letter-spacing: 1vh; }
+  #so-dung { font-size: 5vh; color: var(--phu); margin-top: -2vh; }
 
   /* Chọn bạn đồng hành và chế độ chơi */
   .hang-the { display: flex; gap: 4vw; }
-  .the { width: 36vh; white-space: nowrap; padding: 2vh; border-radius: 3vh; background: #34466e; border: 1vh solid transparent;
-    display: flex; flex-direction: column; align-items: center; gap: 1.5vh; font-size: 4.5vh; font-weight: 700;
-    transition: transform .15s; cursor: pointer; }
-  .the.chon { border-color: var(--vang); transform: scale(1.08); box-shadow: 0 0 4vh rgba(245,180,0,.5); }
+  .the { width: 36vh; white-space: nowrap; padding: 2vh; border-radius: 3vh; background: var(--the); border: 1vh solid transparent;
+    display: flex; flex-direction: column; align-items: center; gap: 1.5vh; font-size: 4.5vh; font-weight: 800;
+    transition: transform .15s; cursor: pointer; box-shadow: 0 1vh 0 var(--bong-the); }
+  .the.chon { border-color: var(--cam); transform: scale(1.08); box-shadow: 0 1vh 0 var(--bong-the), 0 0 5vh rgba(242,107,58,.5); }
   .the { position: relative; }
   /* Số và màu trùng nút trên tay cầm điện thoại và nút màu trên điều khiển TV */
   .the i { position: absolute; top: -2vh; left: -2vh; width: 8vh; height: 8vh; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 5vh;
     color: #fff; box-shadow: 0 .5vh 1vh rgba(0,0,0,.4); }
   .the .mat { width: 20vh; height: 20vh; }
-  .the.che-do { width: 40vh; height: 30vh; justify-content: center; font-size: 5vh; }
+  .the.che-do { width: 44vh; height: 30vh; justify-content: center; font-size: 5vh; }
   .the.che-do b { font-size: 12vh; }
 
   /* Bạn đồng hành: ảnh 3x3 vẻ mặt, nền trắng nên đặt trong vòng tròn trắng */
   .mat { border-radius: 50%; background-color: #fff; background-size: 300% 300%; }
   #ban { position: fixed; left: 3vw; bottom: 4vh; width: 30vh; height: 30vh; display: none;
-    box-shadow: 0 0 0 1vh rgba(255,255,255,.25); }
+    box-shadow: 0 0 0 1vh var(--bong-the), 0 1.5vh 3vh rgba(122,74,28,.25); }
   #ban.hien { display: block; }
   #ban.nay { animation: nay .5s ease; }
   @keyframes nay { 30% { transform: translateY(-3vh) scale(1.05); } 60% { transform: translateY(0) scale(.97); } }
   #loi { position: fixed; left: 2vw; bottom: 37vh; max-width: 18vw; padding: 1.5vh 2vh; border-radius: 3vh;
-    background: #fff; color: #1b2a4a; font-size: 3.4vh; font-weight: 700; display: none; }
+    background: #fff; color: var(--chu); font-size: 3.4vh; font-weight: 800; display: none;
+    box-shadow: 0 .8vh 0 var(--bong-the); }
   #loi::after { content: ""; position: absolute; left: 12vh; bottom: -2vh; border: 1.2vh solid transparent;
     border-top: 1.4vh solid #fff; }
   #loi.hien { display: block; }
@@ -73,13 +89,15 @@
 <body>
 
 <section class="man hien" id="man-dau">
-  <h1>🎈 Đố vui cùng bố 🎈</h1>
-  <p class="goi-y">Bấm nút <b>OK</b> trên điều khiển, hoặc phím <b>Enter</b>, để bắt đầu</p>
+  <img class="logo" src="logo.svg" alt="">
+  <h1>Đố Vui Nhà Khoai</h1>
+  <p class="khau-hieu">Học mà chơi trên TV</p>
+  <div class="nut-cam">Bấm OK để chơi</div>
   <p class="goi-y">📱 Tay cầm điện thoại: <b id="dia-chi"></b></p>
 </section>
 
 <section class="man" id="man-ban">
-  <h1>Con chọn bạn chơi cùng nhé!</h1>
+  <h1>Hôm nay chơi cùng ai?</h1>
   <div class="hang-the" id="cac-ban"></div>
   <p class="goi-y">Bấm nút số cùng màu trên tay cầm, hoặc ◀ ▶ rồi <b>OK</b></p>
 </section>
@@ -94,15 +112,16 @@
 </section>
 
 <section class="man" id="man-choi">
-  <div class="tien-do" id="tien-do"></div>
+  <div class="thanh"><span id="ten-che-do"></span><span id="diem"></span></div>
   <div id="cau"></div>
   <div class="luoi" id="luoi"></div>
 </section>
 
 <section class="man" id="man-cuoi">
-  <h1>🎉 Hoàn thành! 🎉</h1>
+  <h1 id="loi-khen"></h1>
   <div id="sao"></div>
-  <p class="goi-y">Bấm <b>OK</b> để chơi lại</p>
+  <p id="so-dung"></p>
+  <div class="nut-cam">Bấm OK để chơi tiếp</div>
 </section>
 
 <div class="mat" id="ban"></div>
@@ -247,8 +266,8 @@ function bat_dau() {
 function hien_cau() {
   const c = luot[so];
   sai_lan_nay = false; o_chon = 0; dang_cho = false; da_ghi = false;
-  document.getElementById("tien-do").innerHTML =
-    luot.map((_, i) => `<span class="${i < so ? "xong" : ""}">⭐</span>`).join("");
+  document.getElementById("ten-che-do").textContent = chon_che_do === 0 ? "🧮 Ôn thi Toán" : "🎲 Đố vui trộn";
+  document.getElementById("diem").textContent = `⭐ ${sao} · Câu ${so + 1}/${luot.length}`;
   const cau = document.getElementById("cau");
   cau.textContent = c.hien;
   cau.classList.toggle("dai", c.hien.length > 40);
@@ -315,7 +334,11 @@ async function tra_loi(i) {
 }
 
 function ket_thuc() {
-  document.getElementById("sao").textContent = `⭐ ${sao} / ${luot.length} ⭐`;
+  const n = luot.length;
+  document.getElementById("loi-khen").textContent =
+    sao >= n - 1 ? "Giỏi quá, Khoai ơi! 🎉" : sao >= n / 2 ? "Làm tốt lắm, Khoai ơi!" : "Cố lên, Khoai ơi! 💪";
+  document.getElementById("sao").textContent = sao ? "⭐".repeat(sao) : "🌱";
+  document.getElementById("so-dung").textContent = `Đúng ngay ${sao}/${n} câu`;
   doi_man("cuoi");
   mat("tim", true);
   noi(sao >= luot.length - 1 ? "Con giỏi nhất!" : "Mình chơi tiếp nhé!", 0);

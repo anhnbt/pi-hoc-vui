@@ -3,31 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Tay cầm Đố vui</title>
+<title>Tay cầm Đố Vui Nhà Khoai</title>
+<link rel="icon" href="logo.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap">
 <style>
+  /* Phong cách "Khoai nướng ấm áp", cùng màn TV */
   :root {
-    --nen: #1b2a4a; --chu: #ffffff; --phu: #b9c6e4;
+    --nen: #fff7ea; --chu: #7a4a1c; --phu: #a8693a; --cam: #f26b3a; --cam-dam: #b8481f;
+    --khoai: #d9a35b; --khoai-dam: #a8763a; --the: #ffffff; --bong-the: #e6c79a;
     --do: #e5484d; --xanh-la: #30a46c; --vang: #f5b400; --xanh-duong: #3e7bfa;
   }
   * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body { height: 100%; background: var(--nen); color: var(--chu);
-    font-family: system-ui, "Noto Sans", sans-serif; touch-action: manipulation; }
+    font-family: "Baloo 2", system-ui, "Noto Sans", sans-serif; touch-action: manipulation; }
+  .dau { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 20px; font-weight: 800; }
+  .dau img { width: 36px; height: 36px; }
   body { display: flex; flex-direction: column; gap: 16px; padding: 16px; }
   .luoi { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  button { border: none; border-radius: 24px; color: var(--chu); font: inherit; font-weight: 700;
-    font-size: 15vw; transition: transform .08s, filter .08s; }
-  button:active, button.nhan { transform: scale(.94); filter: brightness(1.25); }
+  button { border: none; border-radius: 24px; color: #fff; font: inherit; font-weight: 800;
+    font-size: 15vw; transition: transform .08s, filter .08s; box-shadow: 0 5px 0 rgba(0,0,0,.18); }
+  button:active, button.nhan { transform: translateY(3px) scale(.96); filter: brightness(1.1); box-shadow: 0 2px 0 rgba(0,0,0,.18); }
   .do { background: var(--do); } .xanh_la { background: var(--xanh-la); }
   .vang { background: var(--vang); color: #2b2100; } .xanh_duong { background: var(--xanh-duong); }
   .hang { display: flex; gap: 16px; height: 18vh; }
-  .hang button { flex: 1; background: #34466e; font-size: 7vw; }
+  .hang button { flex: 1; background: var(--khoai); font-size: 7vw; box-shadow: 0 5px 0 var(--khoai-dam); }
   .hang.thap { height: 10vh; }
-  .hang .ok { flex: 2; background: var(--chu); color: var(--nen); }
-  .camera { height: 56px; flex: none; font-size: 18px; background: #34466e; }
+  .hang .ok { flex: 2; background: var(--cam); box-shadow: 0 5px 0 var(--cam-dam); }
+  .camera { height: 56px; flex: none; font-size: 18px; background: var(--the); color: var(--chu); box-shadow: 0 4px 0 var(--bong-the); }
+  a { text-align: center; color: var(--phu); font-size: 14px; }
   #loi { text-align: center; color: var(--phu); min-height: 1.2em; }
 </style>
 </head>
 <body>
+  <div class="dau"><img src="logo.svg" alt="">Đố Vui Nhà Khoai</div>
   <div class="luoi">
     <button class="do" data-phim="do">1</button>
     <button class="xanh_la" data-phim="xanh_la">2</button>
@@ -45,9 +53,9 @@
   <p id="loi"></p>
   <button class="camera" data-phim="camera">📷 Xem camera trên TV</button>
   <button class="camera" data-phim="dong_ho">🕐 Xem đồng hồ trên TV</button>
-  <a href="/be" style="text-align: center; color: var(--phu); font-size: 14px">Sang tay cầm Bé tập nói của em →</a>
-  <a href="/loi-nhan" style="text-align: center; color: var(--phu); font-size: 14px">✉️ Gửi lời nhắn ra loa →</a>
-  <a href="/video" style="text-align: center; color: var(--phu); font-size: 14px">🎬 Gửi video lên TV →</a>
+  <a href="/be">Sang tay cầm Bé tập nói của em →</a>
+  <a href="/loi-nhan">✉️ Gửi lời nhắn ra loa →</a>
+  <a href="/video">🎬 Gửi video lên TV →</a>
 <script>
 const loi = document.getElementById("loi");
 // Bấm là ăn ngay, không phải chờ nhả tay như click. iOS 12 (iPhone 6) chưa có pointerdown nên dùng touchstart;
